@@ -897,8 +897,15 @@ function GameInner({ userId, worldCode }: { userId: string; worldCode: string })
         </div>
       </div>
 
-      {showWall && <WallOfNotes userId={userId} profiles={profiles} onClose={() => setShowWall(false)} />}
-      {showStory && <StoryBook onClose={() => setShowStory(false)} />}
+      {showWall && (
+        <WallOfNotes
+          userId={userId}
+          worldCode={worldCode}
+          profiles={profiles}
+          onClose={() => setShowWall(false)}
+        />
+      )}
+      {showStory && <StoryBook worldCode={worldCode} onClose={() => setShowStory(false)} />}
     </div>
   );
 }
