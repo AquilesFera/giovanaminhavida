@@ -42,7 +42,6 @@ type Gift = {
 type ChatMsg = { id: string; user_id: string; text: string; created_at: string };
 
 type PetState = {
-  id: number;
   name: string;
   x: number;
   y: number;
@@ -50,17 +49,18 @@ type PetState = {
   happiness: number;
   last_fed: string;
   last_pet: string;
+  world_code: string;
 };
 
 const SPEED = 5;
 const AVATAR_SIZE = 72; // bigger sprites
 
-export function GameScene() {
+export function GameScene({ worldCode }: { worldCode: string }) {
   const { user, loading } = useAuth();
   const nav = useNavigate();
 
   useEffect(() => {
-    if (!loading && !user) nav({ to: "/login" });
+    if (!loading && !user) nav({ to: "/play" });
   }, [user, loading, nav]);
 
   if (loading || !user) {
@@ -70,10 +70,10 @@ export function GameScene() {
       </div>
     );
   }
-  return <GameInner userId={user.id} />;
+  return <GameInner userId={user.id} worldCode={worldCode} />;
 }
 
-function GameInner({ userId }: { userId: string }) {
+function GameInner({ userId, worldCode }: { userId: string; worldCode: string }) {
   const viewportRef = useRef<HTMLDivElement>(null);
   const [profiles, setProfiles] = useState<Record<string, Profile>>({});
   const [players, setPlayers] = useState<Record<string, PlayerRow>>({});
@@ -122,14 +122,20 @@ function GameInner({ userId }: { userId: string }) {
       const [{ data: profs }, { data: states }, { data: gs }, { data: cs }, { data: petData }] =
         await Promise.all([
           supabase.from("profiles").select("*"),
-          supabase.from("player_state").select("*"),
-          supabase.from("gifts").select("*").eq("scene", currentScene).order("created_at"),
+          supabase.from("player_state").select("*").eq("world_code", worldCode),
+          supabase
+            .from("gifts")
+            .select("*")
+            .eq("world_code", worldCode)
+            .eq("scene", currentScene)
+            .order("created_at"),
           supabase
             .from("chat_messages")
             .select("*")
+            .eq("world_code", worldCode)
             .eq("scene", currentScene)
             .gte("created_at", new Date(Date.now() - 60_000).toISOString()),
-          supabase.from("pet_state").select("*").eq("id", 1).maybeSingle(),
+          supabase.from("pet_state").select("*").eq("world_code", worldCode).maybeSingle(),
         ]);
       if (!mounted) return;
       if (profs) setProfiles(Object.fromEntries(profs.map((p) => [p.id, p as Profile])));
@@ -144,9 +150,22 @@ function GameInner({ userId }: { userId: string }) {
       }
       if (gs) setGifts(gs as Gift[]);
       if (cs) setChats(cs as ChatMsg[]);
-      if (petData) setPet(petData as PetState);
+      if (petData) {
+        setPet(petData as PetState);
+      } else {
+        // create the world's pet on first visit
+        const { data: created } = await supabase
+          .from("pet_state")
+          .insert({ world_code: worldCode, name: "Mel", x: 1200, y: 800 })
+          .select()
+          .maybeSingle();
+        if (created) setPet(created as PetState);
+      }
 
-      const { data: mProg } = await supabase.from("missions_progress").select("*");
+      const { data: mProg } = await supabase
+        .from("missions_progress")
+        .select("*")
+        .eq("world_code", worldCode);
       if (mProg && mounted) {
         const done = new Set(mProg.filter((m) => m.completed).map((m) => m.mission_id));
         setMissionsDone(done);
@@ -156,7 +175,7 @@ function GameInner({ userId }: { userId: string }) {
 
       await supabase
         .from("player_state")
-        .upsert({ user_id: userId, is_online: true, scene: currentScene });
+        .upsert({ user_id: userId, is_online: true, scene: currentScene, world_code: worldCode });
     }
     load();
 
@@ -206,7 +225,11 @@ function GameInner({ userId }: { userId: string }) {
     }, 2000);
 
     const offline = () =>
-      supabase.from("player_state").update({ is_online: false }).eq("user_id", userId).then(() => {});
+      supabase
+        .from("player_state")
+        .update({ is_online: false })
+        .eq("user_id", userId)
+        .then(() => {});
     window.addEventListener("beforeunload", offline);
 
     return () => {
@@ -216,7 +239,7 @@ function GameInner({ userId }: { userId: string }) {
       window.removeEventListener("beforeunload", offline);
       offline();
     };
-  }, [userId, currentScene]);
+  }, [userId, currentScene, worldCode]);
 
   // Viewport resize
   useEffect(() => {
@@ -287,7 +310,7 @@ function GameInner({ userId }: { userId: string }) {
         const d = Math.hypot(meRef.current.x - r.x, meRef.current.y - r.y);
         if (d < 50) {
           setFoundRoses((s) => new Set(s).add(r.id));
-          bumpMission("find_roses", 1);
+          bumpMission("find_roses", worldCode, 1);
         }
       }
 
@@ -299,7 +322,7 @@ function GameInner({ userId }: { userId: string }) {
         );
         if (d < 60) {
           setLetterFound(true);
-          bumpMission("find_letter", 1);
+          bumpMission("find_letter", worldCode, 1);
         }
       }
 
@@ -329,7 +352,7 @@ function GameInner({ userId }: { userId: string }) {
       if (holdingHands) {
         handsTimerRef.current += dt;
         if (Math.floor(handsTimerRef.current) > Math.floor(handsTimerRef.current - dt)) {
-          setMissionProgress("hold_hands_long", Math.floor(handsTimerRef.current));
+          setMissionProgress("hold_hands_long", worldCode, Math.floor(handsTimerRef.current));
         }
       }
 
@@ -386,10 +409,10 @@ function GameInner({ userId }: { userId: string }) {
           happiness: newHappiness,
           updated_at: new Date().toISOString(),
         })
-        .eq("id", 1);
+        .eq("world_code", worldCode);
     }, 4000);
     return () => clearInterval(iv);
-  }, [pet, partner, players, currentScene]);
+  }, [pet, partner, players, currentScene, worldCode, WORLD_W, WORLD_H]);
 
   // Camera / world transform
   const camera = useMemo(() => {
@@ -417,7 +440,9 @@ function GameInner({ userId }: { userId: string }) {
     const text = chatInput.trim().slice(0, 140);
     if (!text) return;
     setChatInput("");
-    await supabase.from("chat_messages").insert({ user_id: userId, text, scene: currentScene });
+    await supabase
+      .from("chat_messages")
+      .insert({ user_id: userId, text, scene: currentScene, world_code: worldCode });
   }
 
   async function dropRose() {
@@ -425,6 +450,7 @@ function GameInner({ userId }: { userId: string }) {
       from_user: userId,
       gift_type: "rose",
       scene: currentScene,
+      world_code: worldCode,
       x: meRef.current.x,
       y: meRef.current.y + 30,
     });
@@ -444,8 +470,10 @@ function GameInner({ userId }: { userId: string }) {
     if (distance < 100 && partner) {
       setShowHeart(true);
       setTimeout(() => setShowHeart(false), 1400);
-      await supabase.from("chat_messages").insert({ user_id: userId, text: "💋", scene: currentScene });
-      await bumpMission("kiss_count", 1);
+      await supabase
+        .from("chat_messages")
+        .insert({ user_id: userId, text: "💋", scene: currentScene, world_code: worldCode });
+      await bumpMission("kiss_count", worldCode, 1);
     }
   }
 
@@ -460,8 +488,8 @@ function GameInner({ userId }: { userId: string }) {
         happiness: Math.min(100, pet.happiness + 15),
         last_fed: new Date().toISOString(),
       })
-      .eq("id", 1);
-    await bumpMission("feed_pet", 1);
+      .eq("world_code", worldCode);
+    await bumpMission("feed_pet", worldCode, 1);
   }
 
   async function petPet() {
@@ -474,7 +502,7 @@ function GameInner({ userId }: { userId: string }) {
         happiness: Math.min(100, pet.happiness + 20),
         last_pet: new Date().toISOString(),
       })
-      .eq("id", 1);
+      .eq("world_code", worldCode);
   }
 
   async function lightBonfire() {
@@ -482,7 +510,7 @@ function GameInner({ userId }: { userId: string }) {
     const d = Math.hypot(meRef.current.x - scene.bonfire.x, meRef.current.y - scene.bonfire.y);
     if (d > 110) return;
     setBonfireLit(true);
-    await bumpMission("light_bonfire", 1);
+    await bumpMission("light_bonfire", worldCode, 1);
   }
 
   // Auto-dismiss reward toast
@@ -725,7 +753,7 @@ function GameInner({ userId }: { userId: string }) {
       <div className="pointer-events-none absolute inset-x-0 top-0 z-20 flex items-start justify-between gap-2 p-2">
         <div className="pointer-events-auto flex flex-wrap items-center gap-1.5">
           <Link
-            to="/hub"
+            to="/"
             className="flex h-8 items-center justify-center rounded-full border px-3 text-xs"
             style={{
               background: "oklch(0.22 0.06 10 / 0.85)",
@@ -869,8 +897,15 @@ function GameInner({ userId }: { userId: string }) {
         </div>
       </div>
 
-      {showWall && <WallOfNotes userId={userId} profiles={profiles} onClose={() => setShowWall(false)} />}
-      {showStory && <StoryBook onClose={() => setShowStory(false)} />}
+      {showWall && (
+        <WallOfNotes
+          userId={userId}
+          worldCode={worldCode}
+          profiles={profiles}
+          onClose={() => setShowWall(false)}
+        />
+      )}
+      {showStory && <StoryBook worldCode={worldCode} onClose={() => setShowStory(false)} />}
     </div>
   );
 }

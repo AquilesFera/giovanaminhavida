@@ -5,20 +5,20 @@ import { CHAPTERS, MISSIONS } from "@/game/storyChapters";
 type StoryRow = { chapter_id: number; unlocked: boolean };
 type MissionRow = { mission_id: string; progress: number; completed: boolean };
 
-export function StoryBook({ onClose }: { onClose: () => void }) {
+export function StoryBook({ worldCode, onClose }: { worldCode: string; onClose: () => void }) {
   const [unlocked, setUnlocked] = useState<Set<number>>(new Set([1]));
   const [missions, setMissions] = useState<Record<string, MissionRow>>({});
   const [active, setActive] = useState(1);
 
   useEffect(() => {
     Promise.all([
-      supabase.from("story_progress").select("*"),
-      supabase.from("missions_progress").select("*"),
+      supabase.from("story_progress").select("*").eq("world_code", worldCode),
+      supabase.from("missions_progress").select("*").eq("world_code", worldCode),
     ]).then(([s, m]) => {
       if (s.data) setUnlocked(new Set((s.data as StoryRow[]).filter((r) => r.unlocked).map((r) => r.chapter_id)));
       if (m.data) setMissions(Object.fromEntries((m.data as MissionRow[]).map((r) => [r.mission_id, r])));
     });
-  }, []);
+  }, [worldCode]);
 
   const chapter = CHAPTERS.find((c) => c.id === active)!;
   const isUnlocked = unlocked.has(chapter.id);

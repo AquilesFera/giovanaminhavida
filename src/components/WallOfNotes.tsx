@@ -15,10 +15,12 @@ const COLORS = ["#f5e6ea", "#f8d7e0", "#fbeacb", "#e8d4f0"];
 
 export function WallOfNotes({
   userId,
+  worldCode,
   profiles,
   onClose,
 }: {
   userId: string;
+  worldCode: string;
   profiles: Record<string, Profile>;
   onClose: () => void;
 }) {
@@ -30,14 +32,15 @@ export function WallOfNotes({
     supabase
       .from("wall_notes")
       .select("*")
+      .eq("world_code", worldCode)
       .order("created_at", { ascending: false })
       .then(({ data }) => data && setNotes(data as Note[]));
 
     const ch = supabase
-      .channel("wall_notes")
+      .channel(`wall_notes:${worldCode}`)
       .on(
         "postgres_changes",
-        { event: "INSERT", schema: "public", table: "wall_notes" },
+        { event: "INSERT", schema: "public", table: "wall_notes", filter: `world_code=eq.${worldCode}` },
         (p) => setNotes((n) => [p.new as Note, ...n])
       )
       .on(
@@ -50,14 +53,14 @@ export function WallOfNotes({
     return () => {
       supabase.removeChannel(ch);
     };
-  }, []);
+  }, [worldCode]);
 
   async function add(e: React.FormEvent) {
     e.preventDefault();
     const t = text.trim().slice(0, 200);
     if (!t) return;
     setText("");
-    await supabase.from("wall_notes").insert({ user_id: userId, text: t, color });
+    await supabase.from("wall_notes").insert({ user_id: userId, text: t, color, world_code: worldCode });
   }
 
   async function remove(id: string) {

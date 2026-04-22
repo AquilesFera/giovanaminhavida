@@ -10,8 +10,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as SiteRouteImport } from './routes/site'
-import { Route as LoginRouteImport } from './routes/login'
-import { Route as HubRouteImport } from './routes/hub'
+import { Route as PlayRouteImport } from './routes/play'
 import { Route as GameRouteImport } from './routes/game'
 import { Route as IndexRouteImport } from './routes/index'
 
@@ -20,14 +19,9 @@ const SiteRoute = SiteRouteImport.update({
   path: '/site',
   getParentRoute: () => rootRouteImport,
 } as any)
-const LoginRoute = LoginRouteImport.update({
-  id: '/login',
-  path: '/login',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const HubRoute = HubRouteImport.update({
-  id: '/hub',
-  path: '/hub',
+const PlayRoute = PlayRouteImport.update({
+  id: '/play',
+  path: '/play',
   getParentRoute: () => rootRouteImport,
 } as any)
 const GameRoute = GameRouteImport.update({
@@ -44,38 +38,34 @@ const IndexRoute = IndexRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/game': typeof GameRoute
-  '/hub': typeof HubRoute
-  '/login': typeof LoginRoute
+  '/play': typeof PlayRoute
   '/site': typeof SiteRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/game': typeof GameRoute
-  '/hub': typeof HubRoute
-  '/login': typeof LoginRoute
+  '/play': typeof PlayRoute
   '/site': typeof SiteRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/game': typeof GameRoute
-  '/hub': typeof HubRoute
-  '/login': typeof LoginRoute
+  '/play': typeof PlayRoute
   '/site': typeof SiteRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/game' | '/hub' | '/login' | '/site'
+  fullPaths: '/' | '/game' | '/play' | '/site'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/game' | '/hub' | '/login' | '/site'
-  id: '__root__' | '/' | '/game' | '/hub' | '/login' | '/site'
+  to: '/' | '/game' | '/play' | '/site'
+  id: '__root__' | '/' | '/game' | '/play' | '/site'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   GameRoute: typeof GameRoute
-  HubRoute: typeof HubRoute
-  LoginRoute: typeof LoginRoute
+  PlayRoute: typeof PlayRoute
   SiteRoute: typeof SiteRoute
 }
 
@@ -88,18 +78,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SiteRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/login': {
-      id: '/login'
-      path: '/login'
-      fullPath: '/login'
-      preLoaderRoute: typeof LoginRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/hub': {
-      id: '/hub'
-      path: '/hub'
-      fullPath: '/hub'
-      preLoaderRoute: typeof HubRouteImport
+    '/play': {
+      id: '/play'
+      path: '/play'
+      fullPath: '/play'
+      preLoaderRoute: typeof PlayRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/game': {
@@ -122,8 +105,7 @@ declare module '@tanstack/react-router' {
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   GameRoute: GameRoute,
-  HubRoute: HubRoute,
-  LoginRoute: LoginRoute,
+  PlayRoute: PlayRoute,
   SiteRoute: SiteRoute,
 }
 export const routeTree = rootRouteImport
