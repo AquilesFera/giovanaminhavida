@@ -42,7 +42,6 @@ type Gift = {
 type ChatMsg = { id: string; user_id: string; text: string; created_at: string };
 
 type PetState = {
-  id: number;
   name: string;
   x: number;
   y: number;
@@ -50,17 +49,18 @@ type PetState = {
   happiness: number;
   last_fed: string;
   last_pet: string;
+  world_code: string;
 };
 
 const SPEED = 5;
 const AVATAR_SIZE = 72; // bigger sprites
 
-export function GameScene() {
+export function GameScene({ worldCode }: { worldCode: string }) {
   const { user, loading } = useAuth();
   const nav = useNavigate();
 
   useEffect(() => {
-    if (!loading && !user) nav({ to: "/login" });
+    if (!loading && !user) nav({ to: "/play" });
   }, [user, loading, nav]);
 
   if (loading || !user) {
@@ -70,10 +70,10 @@ export function GameScene() {
       </div>
     );
   }
-  return <GameInner userId={user.id} />;
+  return <GameInner userId={user.id} worldCode={worldCode} />;
 }
 
-function GameInner({ userId }: { userId: string }) {
+function GameInner({ userId, worldCode }: { userId: string; worldCode: string }) {
   const viewportRef = useRef<HTMLDivElement>(null);
   const [profiles, setProfiles] = useState<Record<string, Profile>>({});
   const [players, setPlayers] = useState<Record<string, PlayerRow>>({});
