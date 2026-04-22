@@ -122,14 +122,20 @@ function GameInner({ userId, worldCode }: { userId: string; worldCode: string })
       const [{ data: profs }, { data: states }, { data: gs }, { data: cs }, { data: petData }] =
         await Promise.all([
           supabase.from("profiles").select("*"),
-          supabase.from("player_state").select("*"),
-          supabase.from("gifts").select("*").eq("scene", currentScene).order("created_at"),
+          supabase.from("player_state").select("*").eq("world_code", worldCode),
+          supabase
+            .from("gifts")
+            .select("*")
+            .eq("world_code", worldCode)
+            .eq("scene", currentScene)
+            .order("created_at"),
           supabase
             .from("chat_messages")
             .select("*")
+            .eq("world_code", worldCode)
             .eq("scene", currentScene)
             .gte("created_at", new Date(Date.now() - 60_000).toISOString()),
-          supabase.from("pet_state").select("*").eq("id", 1).maybeSingle(),
+          supabase.from("pet_state").select("*").eq("world_code", worldCode).maybeSingle(),
         ]);
       if (!mounted) return;
       if (profs) setProfiles(Object.fromEntries(profs.map((p) => [p.id, p as Profile])));
@@ -144,9 +150,22 @@ function GameInner({ userId, worldCode }: { userId: string; worldCode: string })
       }
       if (gs) setGifts(gs as Gift[]);
       if (cs) setChats(cs as ChatMsg[]);
-      if (petData) setPet(petData as PetState);
+      if (petData) {
+        setPet(petData as PetState);
+      } else {
+        // create the world's pet on first visit
+        const { data: created } = await supabase
+          .from("pet_state")
+          .insert({ world_code: worldCode, name: "Mel", x: 1200, y: 800 })
+          .select()
+          .maybeSingle();
+        if (created) setPet(created as PetState);
+      }
 
-      const { data: mProg } = await supabase.from("missions_progress").select("*");
+      const { data: mProg } = await supabase
+        .from("missions_progress")
+        .select("*")
+        .eq("world_code", worldCode);
       if (mProg && mounted) {
         const done = new Set(mProg.filter((m) => m.completed).map((m) => m.mission_id));
         setMissionsDone(done);
@@ -156,7 +175,7 @@ function GameInner({ userId, worldCode }: { userId: string; worldCode: string })
 
       await supabase
         .from("player_state")
-        .upsert({ user_id: userId, is_online: true, scene: currentScene });
+        .upsert({ user_id: userId, is_online: true, scene: currentScene, world_code: worldCode });
     }
     load();
 
@@ -206,7 +225,11 @@ function GameInner({ userId, worldCode }: { userId: string; worldCode: string })
     }, 2000);
 
     const offline = () =>
-      supabase.from("player_state").update({ is_online: false }).eq("user_id", userId).then(() => {});
+      supabase
+        .from("player_state")
+        .update({ is_online: false })
+        .eq("user_id", userId)
+        .then(() => {});
     window.addEventListener("beforeunload", offline);
 
     return () => {
@@ -216,7 +239,7 @@ function GameInner({ userId, worldCode }: { userId: string; worldCode: string })
       window.removeEventListener("beforeunload", offline);
       offline();
     };
-  }, [userId, currentScene]);
+  }, [userId, currentScene, worldCode]);
 
   // Viewport resize
   useEffect(() => {
@@ -287,7 +310,7 @@ function GameInner({ userId, worldCode }: { userId: string; worldCode: string })
         const d = Math.hypot(meRef.current.x - r.x, meRef.current.y - r.y);
         if (d < 50) {
           setFoundRoses((s) => new Set(s).add(r.id));
-          bumpMission("find_roses", 1);
+          bumpMission("find_roses", worldCode, 1);
         }
       }
 
@@ -299,7 +322,7 @@ function GameInner({ userId, worldCode }: { userId: string; worldCode: string })
         );
         if (d < 60) {
           setLetterFound(true);
-          bumpMission("find_letter", 1);
+          bumpMission("find_letter", worldCode, 1);
         }
       }
 
@@ -329,7 +352,7 @@ function GameInner({ userId, worldCode }: { userId: string; worldCode: string })
       if (holdingHands) {
         handsTimerRef.current += dt;
         if (Math.floor(handsTimerRef.current) > Math.floor(handsTimerRef.current - dt)) {
-          setMissionProgress("hold_hands_long", Math.floor(handsTimerRef.current));
+          setMissionProgress("hold_hands_long", worldCode, Math.floor(handsTimerRef.current));
         }
       }
 
@@ -386,10 +409,10 @@ function GameInner({ userId, worldCode }: { userId: string; worldCode: string })
           happiness: newHappiness,
           updated_at: new Date().toISOString(),
         })
-        .eq("id", 1);
+        .eq("world_code", worldCode);
     }, 4000);
     return () => clearInterval(iv);
-  }, [pet, partner, players, currentScene]);
+  }, [pet, partner, players, currentScene, worldCode, WORLD_W, WORLD_H]);
 
   // Camera / world transform
   const camera = useMemo(() => {
