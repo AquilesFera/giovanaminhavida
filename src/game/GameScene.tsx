@@ -477,6 +477,26 @@ function GameInner({ userId }: { userId: string }) {
       .eq("id", 1);
   }
 
+  async function lightBonfire() {
+    if (currentScene !== "beach" || !scene.bonfire || bonfireLit) return;
+    const d = Math.hypot(meRef.current.x - scene.bonfire.x, meRef.current.y - scene.bonfire.y);
+    if (d > 110) return;
+    setBonfireLit(true);
+    await bumpMission("light_bonfire", 1);
+  }
+
+  // Auto-dismiss reward toast
+  useEffect(() => {
+    if (!reward) return;
+    const t = setTimeout(() => setReward(null), 3500);
+    return () => clearTimeout(t);
+  }, [reward]);
+
+  const distanceToBonfire =
+    currentScene === "beach" && scene.bonfire
+      ? Math.hypot(meRef.current.x - scene.bonfire.x, meRef.current.y - scene.bonfire.y)
+      : Infinity;
+
   // Latest chat per user
   const latestChat: Record<string, ChatMsg | undefined> = {};
   for (const c of chats) {
