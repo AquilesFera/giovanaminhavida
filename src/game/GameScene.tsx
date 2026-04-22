@@ -10,6 +10,7 @@ import { PetRabbit } from "@/components/Pet";
 import { StoryBook } from "@/components/StoryBook";
 import { bumpMission, setMissionProgress } from "@/game/missions";
 import { SCENES, type SceneId } from "@/game/scenes";
+import { MISSIONS } from "@/game/storyChapters";
 
 type Direction = "up" | "down" | "left" | "right";
 
@@ -85,6 +86,10 @@ function GameInner({ userId }: { userId: string }) {
   const [pet, setPet] = useState<PetState | null>(null);
   const [foundRoses, setFoundRoses] = useState<Set<string>>(new Set());
   const [petBubble, setPetBubble] = useState<string | null>(null);
+  const [missionsDone, setMissionsDone] = useState<Set<string>>(new Set());
+  const [reward, setReward] = useState<{ emoji: string; text: string } | null>(null);
+  const [bonfireLit, setBonfireLit] = useState(false);
+  const [letterFound, setLetterFound] = useState(false);
 
   const meRef = useRef({ x: 1200, y: 800, dir: "down" as Direction, walking: false });
   const keysRef = useRef<Record<string, boolean>>({});
