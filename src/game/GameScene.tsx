@@ -440,7 +440,9 @@ function GameInner({ userId, worldCode }: { userId: string; worldCode: string })
     const text = chatInput.trim().slice(0, 140);
     if (!text) return;
     setChatInput("");
-    await supabase.from("chat_messages").insert({ user_id: userId, text, scene: currentScene });
+    await supabase
+      .from("chat_messages")
+      .insert({ user_id: userId, text, scene: currentScene, world_code: worldCode });
   }
 
   async function dropRose() {
@@ -448,6 +450,7 @@ function GameInner({ userId, worldCode }: { userId: string; worldCode: string })
       from_user: userId,
       gift_type: "rose",
       scene: currentScene,
+      world_code: worldCode,
       x: meRef.current.x,
       y: meRef.current.y + 30,
     });
@@ -467,8 +470,10 @@ function GameInner({ userId, worldCode }: { userId: string; worldCode: string })
     if (distance < 100 && partner) {
       setShowHeart(true);
       setTimeout(() => setShowHeart(false), 1400);
-      await supabase.from("chat_messages").insert({ user_id: userId, text: "💋", scene: currentScene });
-      await bumpMission("kiss_count", 1);
+      await supabase
+        .from("chat_messages")
+        .insert({ user_id: userId, text: "💋", scene: currentScene, world_code: worldCode });
+      await bumpMission("kiss_count", worldCode, 1);
     }
   }
 
@@ -483,8 +488,8 @@ function GameInner({ userId, worldCode }: { userId: string; worldCode: string })
         happiness: Math.min(100, pet.happiness + 15),
         last_fed: new Date().toISOString(),
       })
-      .eq("id", 1);
-    await bumpMission("feed_pet", 1);
+      .eq("world_code", worldCode);
+    await bumpMission("feed_pet", worldCode, 1);
   }
 
   async function petPet() {
@@ -497,7 +502,7 @@ function GameInner({ userId, worldCode }: { userId: string; worldCode: string })
         happiness: Math.min(100, pet.happiness + 20),
         last_pet: new Date().toISOString(),
       })
-      .eq("id", 1);
+      .eq("world_code", worldCode);
   }
 
   async function lightBonfire() {
@@ -505,7 +510,7 @@ function GameInner({ userId, worldCode }: { userId: string; worldCode: string })
     const d = Math.hypot(meRef.current.x - scene.bonfire.x, meRef.current.y - scene.bonfire.y);
     if (d > 110) return;
     setBonfireLit(true);
-    await bumpMission("light_bonfire", 1);
+    await bumpMission("light_bonfire", worldCode, 1);
   }
 
   // Auto-dismiss reward toast
@@ -748,7 +753,7 @@ function GameInner({ userId, worldCode }: { userId: string; worldCode: string })
       <div className="pointer-events-none absolute inset-x-0 top-0 z-20 flex items-start justify-between gap-2 p-2">
         <div className="pointer-events-auto flex flex-wrap items-center gap-1.5">
           <Link
-            to="/hub"
+            to="/"
             className="flex h-8 items-center justify-center rounded-full border px-3 text-xs"
             style={{
               background: "oklch(0.22 0.06 10 / 0.85)",
