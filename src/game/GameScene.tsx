@@ -118,11 +118,11 @@ function GameInner({ userId }: { userId: string }) {
         await Promise.all([
           supabase.from("profiles").select("*"),
           supabase.from("player_state").select("*"),
-          supabase.from("gifts").select("*").eq("scene", "garden").order("created_at"),
+          supabase.from("gifts").select("*").eq("scene", currentScene).order("created_at"),
           supabase
             .from("chat_messages")
             .select("*")
-            .eq("scene", "garden")
+            .eq("scene", currentScene)
             .gte("created_at", new Date(Date.now() - 60_000).toISOString()),
           supabase.from("pet_state").select("*").eq("id", 1).maybeSingle(),
         ]);
@@ -143,7 +143,7 @@ function GameInner({ userId }: { userId: string }) {
 
       await supabase
         .from("player_state")
-        .upsert({ user_id: userId, is_online: true, scene: "garden" });
+        .upsert({ user_id: userId, is_online: true, scene: currentScene });
     }
     load();
 
@@ -188,7 +188,7 @@ function GameInner({ userId }: { userId: string }) {
       window.removeEventListener("beforeunload", offline);
       offline();
     };
-  }, [userId]);
+  }, [userId, currentScene]);
 
   // Viewport resize
   useEffect(() => {
