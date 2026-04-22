@@ -544,6 +544,44 @@ function GameInner({ userId }: { userId: string }) {
             )
           )}
 
+          {/* Bonfire (beach) */}
+          {currentScene === "beach" && scene.bonfire && (
+            <div
+              className="pointer-events-none absolute -translate-x-1/2 -translate-y-1/2"
+              style={{ left: scene.bonfire.x, top: scene.bonfire.y }}
+            >
+              <span
+                className="text-5xl"
+                style={{
+                  filter: bonfireLit
+                    ? "drop-shadow(0 0 20px oklch(0.75 0.2 50)) drop-shadow(0 0 40px oklch(0.7 0.22 35))"
+                    : "grayscale(0.6) drop-shadow(0 2px 4px black)",
+                  animation: bonfireLit ? "float-heart 0.6s ease-in-out infinite alternate" : "none",
+                }}
+              >
+                {bonfireLit ? "🔥" : "🪵"}
+              </span>
+            </div>
+          )}
+
+          {/* Hidden letter (house) */}
+          {currentScene === "house" && scene.hiddenLetter && !letterFound && (
+            <div
+              className="pointer-events-none absolute -translate-x-1/2 -translate-y-1/2"
+              style={{ left: scene.hiddenLetter.x, top: scene.hiddenLetter.y }}
+            >
+              <span
+                className="text-3xl"
+                style={{
+                  filter: "drop-shadow(0 0 12px oklch(0.78 0.13 85))",
+                  animation: "float-heart 2s ease-in-out infinite alternate",
+                }}
+              >
+                💌
+              </span>
+            </div>
+          )}
+
           {/* Gifts */}
           {gifts.map((g) => (
             <button
@@ -734,7 +772,7 @@ function GameInner({ userId }: { userId: string }) {
       </div>
 
       {/* Mission hint when finding roses */}
-      {foundRoses.size > 0 && foundRoses.size < HIDDEN_ROSES.length && (
+      {currentScene === "garden" && foundRoses.size > 0 && foundRoses.size < HIDDEN_ROSES.length && (
         <div
           className="pointer-events-none absolute left-1/2 top-14 z-20 -translate-x-1/2 rounded-full px-3 py-1 text-[10px] uppercase tracking-widest"
           style={{
@@ -746,6 +784,44 @@ function GameInner({ userId }: { userId: string }) {
           }}
         >
           ✨ rosas encontradas: {foundRoses.size}/{HIDDEN_ROSES.length}
+        </div>
+      )}
+
+      {/* Per-scene mission hint */}
+      <SceneMissionHint
+        scene={currentScene}
+        bonfireLit={bonfireLit}
+        letterFound={letterFound}
+        rosesFound={foundRoses.size}
+        rosesTotal={HIDDEN_ROSES.length}
+        missionsDone={missionsDone}
+      />
+
+      {/* Reward toast */}
+      {reward && (
+        <div
+          className="pointer-events-none absolute left-1/2 top-24 z-50 -translate-x-1/2 rounded-2xl border px-5 py-3 text-center"
+          style={{
+            background: "linear-gradient(135deg, oklch(0.3 0.12 5 / 0.95), oklch(0.22 0.08 10 / 0.95))",
+            borderColor: "oklch(0.78 0.13 85 / 0.6)",
+            boxShadow: "0 10px 40px oklch(0.78 0.13 85 / 0.4)",
+            backdropFilter: "blur(8px)",
+            animation: "float-heart 0.6s ease-out",
+          }}
+        >
+          <div className="text-3xl">{reward.emoji}</div>
+          <div
+            className="mt-1 text-[11px] uppercase tracking-widest"
+            style={{ color: "oklch(0.78 0.13 85)", fontFamily: "var(--font-heading)" }}
+          >
+            ✨ recompensa
+          </div>
+          <div
+            className="text-sm"
+            style={{ color: "oklch(0.95 0.02 15)", fontFamily: "var(--font-body)" }}
+          >
+            {reward.text}
+          </div>
         </div>
       )}
 
