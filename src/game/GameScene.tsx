@@ -639,7 +639,19 @@ function GameInner({ userId }: { userId: string }) {
             ← menu
           </Link>
           <DayCounter />
-          {pet && <PetStatus pet={pet} />}
+          <span
+            className="rounded-full px-2.5 py-1 text-[10px] uppercase tracking-widest"
+            style={{
+              background: "oklch(0.22 0.06 10 / 0.85)",
+              border: "1px solid oklch(0.78 0.13 85 / 0.4)",
+              color: "oklch(0.78 0.13 85)",
+              fontFamily: "var(--font-heading)",
+              backdropFilter: "blur(6px)",
+            }}
+          >
+            {scene.name}
+          </span>
+          {pet && currentScene === "garden" && <PetStatus pet={pet} />}
         </div>
         <div className="pointer-events-auto flex flex-wrap items-center gap-1.5">
           {partner ? (
