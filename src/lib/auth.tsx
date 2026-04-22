@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
+import { createContext, useContext, useEffect, useRef, useState, type ReactNode } from "react";
 import type { Session, User } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -6,9 +6,6 @@ type AuthCtx = {
   user: User | null;
   session: Session | null;
   loading: boolean;
-  signIn: (email: string, password: string) => Promise<{ error: string | null }>;
-  signUp: (email: string, password: string, displayName: string) => Promise<{ error: string | null }>;
-  signOut: () => Promise<void>;
 };
 
 const Ctx = createContext<AuthCtx | null>(null);
@@ -17,46 +14,37 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const ensuringRef = useRef(false);
 
   useEffect(() => {
     const { data: sub } = supabase.auth.onAuthStateChange((_e, s) => {
       setSession(s);
       setUser(s?.user ?? null);
     });
-    supabase.auth.getSession().then(({ data }) => {
-      setSession(data.session);
-      setUser(data.session?.user ?? null);
-      setLoading(false);
-    });
+
+    (async () => {
+      const { data } = await supabase.auth.getSession();
+      if (data.session) {
+        setSession(data.session);
+        setUser(data.session.user);
+        setLoading(false);
+        return;
+      }
+      // No session yet → sign in anonymously so RLS works.
+      if (!ensuringRef.current) {
+        ensuringRef.current = true;
+        const { data: anon, error } = await supabase.auth.signInAnonymously();
+        if (error) console.error("anon sign-in failed", error);
+        setSession(anon.session ?? null);
+        setUser(anon.user ?? null);
+        setLoading(false);
+      }
+    })();
+
     return () => sub.subscription.unsubscribe();
   }, []);
 
-  const signIn: AuthCtx["signIn"] = async (email, password) => {
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
-    return { error: error?.message ?? null };
-  };
-
-  const signUp: AuthCtx["signUp"] = async (email, password, displayName) => {
-    const { error } = await supabase.auth.signUp({
-      email,
-      password,
-      options: {
-        emailRedirectTo: `${window.location.origin}/`,
-        data: { display_name: displayName },
-      },
-    });
-    return { error: error?.message ?? null };
-  };
-
-  const signOut = async () => {
-    await supabase.auth.signOut();
-  };
-
-  return (
-    <Ctx.Provider value={{ user, session, loading, signIn, signUp, signOut }}>
-      {children}
-    </Ctx.Provider>
-  );
+  return <Ctx.Provider value={{ user, session, loading }}>{children}</Ctx.Provider>;
 }
 
 export function useAuth() {
