@@ -507,8 +507,40 @@ function GameInner({ userId }: { userId: string }) {
             </button>
           ))}
 
-          {/* Pet */}
-          {pet && (
+          {/* Portals */}
+          {scene.portals.map((portal) => (
+            <div
+              key={`${portal.to}-${portal.x}`}
+              className="pointer-events-none absolute -translate-x-1/2 -translate-y-1/2"
+              style={{ left: portal.x, top: portal.y }}
+            >
+              <div
+                className="flex h-20 w-20 items-center justify-center rounded-full"
+                style={{
+                  background:
+                    "radial-gradient(circle, oklch(0.78 0.13 85 / 0.5) 0%, oklch(0.58 0.14 5 / 0.2) 70%, transparent 100%)",
+                  border: "2px dashed oklch(0.78 0.13 85 / 0.7)",
+                  boxShadow: "0 0 30px oklch(0.78 0.13 85 / 0.5)",
+                  animation: "float-heart 2s ease-in-out infinite alternate",
+                }}
+              >
+                <span className="text-3xl">{portal.emoji}</span>
+              </div>
+              <div
+                className="mt-1 text-center text-[10px] uppercase tracking-widest"
+                style={{
+                  fontFamily: "var(--font-heading)",
+                  color: "oklch(0.95 0.02 15)",
+                  textShadow: "0 2px 4px black",
+                }}
+              >
+                {portal.label}
+              </div>
+            </div>
+          ))}
+
+          {/* Pet (only in garden) */}
+          {pet && currentScene === "garden" && (
             <>
               <PetRabbit
                 x={Number(pet.x)}
@@ -552,7 +584,7 @@ function GameInner({ userId }: { userId: string }) {
 
           {/* Players */}
           {Object.values(players)
-            .filter((p) => p.scene === "garden")
+            .filter((p) => p.scene === currentScene)
             .map((p) => {
               const isMe = p.user_id === userId;
               const x = isMe ? meRef.current.x : Number(p.x);
