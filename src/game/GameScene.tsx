@@ -183,6 +183,21 @@ function GameInner({ userId }: { userId: string }) {
       .on("postgres_changes", { event: "*", schema: "public", table: "pet_state" }, (p) => {
         if (p.new) setPet(p.new as PetState);
       })
+      .on("postgres_changes", { event: "*", schema: "public", table: "missions_progress" }, (p) => {
+        const row = p.new as { mission_id: string; completed: boolean };
+        if (row?.completed) {
+          setMissionsDone((s) => {
+            if (s.has(row.mission_id)) return s;
+            const next = new Set(s);
+            next.add(row.mission_id);
+            const m = MISSIONS.find((x) => x.id === row.mission_id);
+            if (m) setReward({ emoji: m.emoji, text: `${m.title} concluída!` });
+            if (row.mission_id === "light_bonfire") setBonfireLit(true);
+            if (row.mission_id === "find_letter") setLetterFound(true);
+            return next;
+          });
+        }
+      })
       .subscribe();
 
     const cleanup = setInterval(() => {
@@ -273,6 +288,18 @@ function GameInner({ userId }: { userId: string }) {
         if (d < 50) {
           setFoundRoses((s) => new Set(s).add(r.id));
           bumpMission("find_roses", 1);
+        }
+      }
+
+      // Hidden letter pickup (house)
+      if (currentScene === "house" && scene.hiddenLetter && !letterFound) {
+        const d = Math.hypot(
+          meRef.current.x - scene.hiddenLetter.x,
+          meRef.current.y - scene.hiddenLetter.y
+        );
+        if (d < 60) {
+          setLetterFound(true);
+          bumpMission("find_letter", 1);
         }
       }
 
