@@ -175,12 +175,11 @@ function GardenInner({ userId, onSignOut }: { userId: string; onSignOut: () => v
 
     // Mark offline on unload
     const offline = () => {
-      navigator.sendBeacon &&
-        supabase
-          .from("player_state")
-          .update({ is_online: false })
-          .eq("user_id", userId)
-          .then(() => {});
+      supabase
+        .from("player_state")
+        .update({ is_online: false })
+        .eq("user_id", userId)
+        .then(() => {});
     };
     window.addEventListener("beforeunload", offline);
 
