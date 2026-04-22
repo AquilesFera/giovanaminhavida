@@ -439,7 +439,7 @@ function GameInner({ userId }: { userId: string }) {
             height: WORLD_H,
             transform: `scale(${zoom}) translate(${-camera.x}px, ${-camera.y}px)`,
             transformOrigin: "0 0",
-            backgroundImage: `url(${worldBg})`,
+            backgroundImage: `url(${scene.bg})`,
             backgroundSize: "100% 100%",
             imageRendering: "auto",
           }}
