@@ -94,6 +94,13 @@ function GameInner({ userId }: { userId: string }) {
   const [, setTick] = useState(0);
   const [viewport, setViewport] = useState({ w: 800, h: 600 });
   const [zoom, setZoom] = useState(1);
+  const [currentScene, setCurrentScene] = useState<SceneId>("garden");
+  const portalCooldownRef = useRef(0);
+
+  const scene = SCENES[currentScene];
+  const WORLD_W = scene.width;
+  const WORLD_H = scene.height;
+  const HIDDEN_ROSES = scene.hiddenRoses ?? [];
 
   const me = players[userId];
   const partnerEntry = Object.entries(players).find(([id]) => id !== userId);
