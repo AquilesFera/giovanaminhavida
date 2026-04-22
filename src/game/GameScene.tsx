@@ -384,7 +384,7 @@ function GameInner({ userId }: { userId: string }) {
     await supabase.from("gifts").insert({
       from_user: userId,
       gift_type: "rose",
-      scene: "garden",
+      scene: currentScene,
       x: meRef.current.x,
       y: meRef.current.y + 30,
     });
@@ -404,7 +404,7 @@ function GameInner({ userId }: { userId: string }) {
     if (distance < 100 && partner) {
       setShowHeart(true);
       setTimeout(() => setShowHeart(false), 1400);
-      await supabase.from("chat_messages").insert({ user_id: userId, text: "💋", scene: "garden" });
+      await supabase.from("chat_messages").insert({ user_id: userId, text: "💋", scene: currentScene });
       await bumpMission("kiss_count", 1);
     }
   }
