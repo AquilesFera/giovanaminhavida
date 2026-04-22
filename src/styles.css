@@ -4,6 +4,8 @@
 
 @custom-variant dark (&:is(.dark *));
 
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&family=Cinzel:wght@400;500;600&family=Inter:wght@300;400;500&display=swap');
+
 /*
  * Design system definition.
  *
@@ -59,29 +61,42 @@
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-ring: var(--sidebar-ring);
+  --color-wine: var(--wine);
+  --color-rose: var(--rose);
+  --color-gold: var(--gold);
+  --color-cream: var(--cream);
+  --font-display: 'Cormorant Garamond', serif;
+  --font-heading: 'Cinzel', serif;
+  --font-body: 'Inter', sans-serif;
 }
 
 :root {
   --radius: 0.625rem;
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.129 0.042 264.695);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.129 0.042 264.695);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.129 0.042 264.695);
-  --primary: oklch(0.208 0.042 265.755);
-  --primary-foreground: oklch(0.984 0.003 247.858);
-  --secondary: oklch(0.968 0.007 247.896);
-  --secondary-foreground: oklch(0.208 0.042 265.755);
-  --muted: oklch(0.968 0.007 247.896);
-  --muted-foreground: oklch(0.554 0.046 257.417);
-  --accent: oklch(0.968 0.007 247.896);
-  --accent-foreground: oklch(0.208 0.042 265.755);
+  /* Brand palette: wine #6b1a2e, rose #c0506e, gold #d4af37, cream #f5e6ea */
+  --wine: oklch(0.32 0.11 13);
+  --rose: oklch(0.58 0.14 5);
+  --gold: oklch(0.78 0.13 85);
+  --cream: oklch(0.95 0.02 15);
+
+  --background: oklch(0.18 0.05 10);
+  --foreground: oklch(0.95 0.02 15);
+  --card: oklch(0.22 0.06 10);
+  --card-foreground: oklch(0.95 0.02 15);
+  --popover: oklch(0.22 0.06 10);
+  --popover-foreground: oklch(0.95 0.02 15);
+  --primary: oklch(0.58 0.14 5);
+  --primary-foreground: oklch(0.98 0.01 15);
+  --secondary: oklch(0.32 0.11 13);
+  --secondary-foreground: oklch(0.98 0.01 15);
+  --muted: oklch(0.28 0.04 10);
+  --muted-foreground: oklch(0.75 0.04 15);
+  --accent: oklch(0.78 0.13 85);
+  --accent-foreground: oklch(0.18 0.05 10);
   --destructive: oklch(0.577 0.245 27.325);
   --destructive-foreground: oklch(0.984 0.003 247.858);
-  --border: oklch(0.929 0.013 255.508);
-  --input: oklch(0.929 0.013 255.508);
-  --ring: oklch(0.704 0.04 256.788);
+  --border: oklch(0.35 0.05 10);
+  --input: oklch(0.28 0.04 10);
+  --ring: oklch(0.78 0.13 85);
   --chart-1: oklch(0.646 0.222 41.116);
   --chart-2: oklch(0.6 0.118 184.704);
   --chart-3: oklch(0.398 0.07 227.392);
@@ -140,5 +155,38 @@
   body {
     background-color: var(--color-background);
     color: var(--color-foreground);
+    font-family: var(--font-body);
+  }
+
+  h1, h2, h3, h4 {
+    font-family: var(--font-display);
   }
 }
+
+/* Falling petals animation */
+@keyframes petal-fall {
+  0% { transform: translateY(-10vh) translateX(0) rotate(0deg); opacity: 0; }
+  10% { opacity: 0.7; }
+  100% { transform: translateY(110vh) translateX(40px) rotate(360deg); opacity: 0; }
+}
+.petal {
+  position: absolute;
+  top: -40px;
+  width: 22px;
+  height: 22px;
+  pointer-events: none;
+  animation: petal-fall linear infinite;
+}
+
+@keyframes float-heart {
+  0% { transform: translateY(0) scale(0.5); opacity: 0; }
+  20% { opacity: 1; }
+  100% { transform: translateY(-60px) scale(1.2); opacity: 0; }
+}
+.float-heart { animation: float-heart 1.4s ease-out forwards; }
+
+@keyframes walk-bounce {
+  0%,100% { transform: translateY(0); }
+  50% { transform: translateY(-2px); }
+}
+.walking { animation: walk-bounce 0.4s ease-in-out infinite; }
