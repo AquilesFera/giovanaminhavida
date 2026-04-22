@@ -146,6 +146,14 @@ function GameInner({ userId }: { userId: string }) {
       if (cs) setChats(cs as ChatMsg[]);
       if (petData) setPet(petData as PetState);
 
+      const { data: mProg } = await supabase.from("missions_progress").select("*");
+      if (mProg && mounted) {
+        const done = new Set(mProg.filter((m) => m.completed).map((m) => m.mission_id));
+        setMissionsDone(done);
+        setBonfireLit(done.has("light_bonfire"));
+        setLetterFound(done.has("find_letter"));
+      }
+
       await supabase
         .from("player_state")
         .upsert({ user_id: userId, is_online: true, scene: currentScene });
