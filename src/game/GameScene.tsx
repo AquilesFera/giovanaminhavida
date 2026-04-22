@@ -836,6 +836,13 @@ function GameInner({ userId }: { userId: string }) {
               <ActionBtn label="Beijo 💋" onClick={blow} disabled={distance >= 100 || !partner} />
               <ActionBtn label="Cenoura 🥕" onClick={feedPet} disabled={distanceToPet >= 120} />
               <ActionBtn label="Carinho 🤗" onClick={petPet} disabled={distanceToPet >= 120} />
+              {currentScene === "beach" && !bonfireLit && (
+                <ActionBtn
+                  label="Acender 🔥"
+                  onClick={lightBonfire}
+                  disabled={distanceToBonfire >= 110}
+                />
+              )}
             </div>
             <form onSubmit={sendChat} className="flex gap-1.5">
               <input
@@ -978,6 +985,52 @@ function Bar({ value, color, title }: { value: number; color: string; title: str
   return (
     <div title={title} className="h-1.5 w-8 overflow-hidden rounded-full" style={{ background: "oklch(0.15 0.03 10)" }}>
       <div className="h-full transition-all" style={{ width: `${Math.max(0, Math.min(100, value))}%`, background: color }} />
+    </div>
+  );
+}
+
+function SceneMissionHint({
+  scene,
+  bonfireLit,
+  letterFound,
+  rosesFound,
+  rosesTotal,
+  missionsDone,
+}: {
+  scene: SceneId;
+  bonfireLit: boolean;
+  letterFound: boolean;
+  rosesFound: number;
+  rosesTotal: number;
+  missionsDone: Set<string>;
+}) {
+  let label = "";
+  if (scene === "beach") {
+    label = bonfireLit
+      ? "🔥 fogueira acesa — missão completa"
+      : "🪵 ache a pilha de lenha e acenda a fogueira";
+  } else if (scene === "house") {
+    label = letterFound
+      ? "💌 carta encontrada — missão completa"
+      : "💌 procure a carta romântica escondida";
+  } else if (scene === "garden") {
+    if (missionsDone.has("find_roses")) return null;
+    if (rosesFound === 0) label = `🌹 caça às rosas: 0/${rosesTotal}`;
+    else return null; // outro indicador já mostra
+  }
+  if (!label) return null;
+  return (
+    <div
+      className="pointer-events-none absolute left-1/2 top-14 z-20 -translate-x-1/2 whitespace-nowrap rounded-full px-3 py-1 text-[10px] uppercase tracking-widest"
+      style={{
+        background: "oklch(0.22 0.06 10 / 0.9)",
+        border: "1px solid oklch(0.78 0.13 85 / 0.4)",
+        color: "oklch(0.78 0.13 85)",
+        fontFamily: "var(--font-heading)",
+        backdropFilter: "blur(6px)",
+      }}
+    >
+      {label}
     </div>
   );
 }
