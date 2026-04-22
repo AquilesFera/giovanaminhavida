@@ -23,6 +23,8 @@ export type SceneDef = {
   spawn: { x: number; y: number };
   portals: Portal[];
   hiddenRoses?: { id: string; x: number; y: number }[];
+  bonfire?: { x: number; y: number };
+  hiddenLetter?: { x: number; y: number };
 };
 
 export const SCENES: Record<SceneId, SceneDef> = {
@@ -55,6 +57,7 @@ export const SCENES: Record<SceneId, SceneDef> = {
     portals: [
       { x: 60, y: 600, to: "garden", spawnX: 2250, spawnY: 800, label: "Jardim", emoji: "🌹" },
     ],
+    bonfire: { x: 1300, y: 850 },
   },
   house: {
     id: "house",
@@ -66,5 +69,6 @@ export const SCENES: Record<SceneId, SceneDef> = {
     portals: [
       { x: 1500, y: 1100, to: "garden", spawnX: 150, spawnY: 800, label: "Jardim", emoji: "🌹" },
     ],
+    hiddenLetter: { x: 420, y: 480 },
   },
 };
