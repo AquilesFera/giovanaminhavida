@@ -9,11 +9,17 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as SiteRouteImport } from './routes/site'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as HubRouteImport } from './routes/hub'
 import { Route as GameRouteImport } from './routes/game'
 import { Route as IndexRouteImport } from './routes/index'
 
+const SiteRoute = SiteRouteImport.update({
+  id: '/site',
+  path: '/site',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const LoginRoute = LoginRouteImport.update({
   id: '/login',
   path: '/login',
@@ -40,12 +46,14 @@ export interface FileRoutesByFullPath {
   '/game': typeof GameRoute
   '/hub': typeof HubRoute
   '/login': typeof LoginRoute
+  '/site': typeof SiteRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/game': typeof GameRoute
   '/hub': typeof HubRoute
   '/login': typeof LoginRoute
+  '/site': typeof SiteRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -53,13 +61,14 @@ export interface FileRoutesById {
   '/game': typeof GameRoute
   '/hub': typeof HubRoute
   '/login': typeof LoginRoute
+  '/site': typeof SiteRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/game' | '/hub' | '/login'
+  fullPaths: '/' | '/game' | '/hub' | '/login' | '/site'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/game' | '/hub' | '/login'
-  id: '__root__' | '/' | '/game' | '/hub' | '/login'
+  to: '/' | '/game' | '/hub' | '/login' | '/site'
+  id: '__root__' | '/' | '/game' | '/hub' | '/login' | '/site'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -67,10 +76,18 @@ export interface RootRouteChildren {
   GameRoute: typeof GameRoute
   HubRoute: typeof HubRoute
   LoginRoute: typeof LoginRoute
+  SiteRoute: typeof SiteRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/site': {
+      id: '/site'
+      path: '/site'
+      fullPath: '/site'
+      preLoaderRoute: typeof SiteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/login': {
       id: '/login'
       path: '/login'
@@ -107,7 +124,17 @@ const rootRouteChildren: RootRouteChildren = {
   GameRoute: GameRoute,
   HubRoute: HubRoute,
   LoginRoute: LoginRoute,
+  SiteRoute: SiteRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { createStart } from '@tanstack/react-start'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+  }
+}

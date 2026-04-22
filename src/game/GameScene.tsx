@@ -9,7 +9,7 @@ import { DayCounter } from "@/components/DayCounter";
 import { PetRabbit } from "@/components/Pet";
 import { StoryBook } from "@/components/StoryBook";
 import { bumpMission, setMissionProgress } from "@/game/missions";
-import worldBg from "@/assets/world-map.jpg";
+import { SCENES, type SceneId } from "@/game/scenes";
 
 type Direction = "up" | "down" | "left" | "right";
 
@@ -51,19 +51,8 @@ type PetState = {
   last_pet: string;
 };
 
-const WORLD_W = 2400;
-const WORLD_H = 1600;
 const SPEED = 5;
 const AVATAR_SIZE = 72; // bigger sprites
-
-// Hidden roses placed around the map (mission: find_roses)
-const HIDDEN_ROSES = [
-  { id: "r1", x: 420, y: 380 },
-  { id: "r2", x: 1850, y: 520 },
-  { id: "r3", x: 1100, y: 1100 },
-  { id: "r4", x: 380, y: 1280 },
-  { id: "r5", x: 2050, y: 1300 },
-];
 
 export function GameScene() {
   const { user, loading } = useAuth();
@@ -105,6 +94,13 @@ function GameInner({ userId }: { userId: string }) {
   const [, setTick] = useState(0);
   const [viewport, setViewport] = useState({ w: 800, h: 600 });
   const [zoom, setZoom] = useState(1);
+  const [currentScene, setCurrentScene] = useState<SceneId>("garden");
+  const portalCooldownRef = useRef(0);
+
+  const scene = SCENES[currentScene];
+  const WORLD_W = scene.width;
+  const WORLD_H = scene.height;
+  const HIDDEN_ROSES = scene.hiddenRoses ?? [];
 
   const me = players[userId];
   const partnerEntry = Object.entries(players).find(([id]) => id !== userId);
@@ -122,11 +118,11 @@ function GameInner({ userId }: { userId: string }) {
         await Promise.all([
           supabase.from("profiles").select("*"),
           supabase.from("player_state").select("*"),
-          supabase.from("gifts").select("*").eq("scene", "garden").order("created_at"),
+          supabase.from("gifts").select("*").eq("scene", currentScene).order("created_at"),
           supabase
             .from("chat_messages")
             .select("*")
-            .eq("scene", "garden")
+            .eq("scene", currentScene)
             .gte("created_at", new Date(Date.now() - 60_000).toISOString()),
           supabase.from("pet_state").select("*").eq("id", 1).maybeSingle(),
         ]);
@@ -147,7 +143,7 @@ function GameInner({ userId }: { userId: string }) {
 
       await supabase
         .from("player_state")
-        .upsert({ user_id: userId, is_online: true, scene: "garden" });
+        .upsert({ user_id: userId, is_online: true, scene: currentScene });
     }
     load();
 
@@ -192,7 +188,7 @@ function GameInner({ userId }: { userId: string }) {
       window.removeEventListener("beforeunload", offline);
       offline();
     };
-  }, [userId]);
+  }, [userId, currentScene]);
 
   // Viewport resize
   useEffect(() => {
@@ -267,6 +263,28 @@ function GameInner({ userId }: { userId: string }) {
         }
       }
 
+      // Portal check
+      if (t > portalCooldownRef.current) {
+        for (const portal of scene.portals) {
+          const d = Math.hypot(meRef.current.x - portal.x, meRef.current.y - portal.y);
+          if (d < 60) {
+            portalCooldownRef.current = t + 1500;
+            meRef.current.x = portal.spawnX;
+            meRef.current.y = portal.spawnY;
+            void supabase
+              .from("player_state")
+              .update({
+                x: portal.spawnX,
+                y: portal.spawnY,
+                scene: portal.to,
+              })
+              .eq("user_id", userId);
+            setCurrentScene(portal.to);
+            break;
+          }
+        }
+      }
+
       // Holding hands timer mission
       if (holdingHands) {
         handsTimerRef.current += dt;
@@ -285,7 +303,7 @@ function GameInner({ userId }: { userId: string }) {
             y: meRef.current.y,
             direction: meRef.current.dir,
             is_online: true,
-            scene: "garden",
+            scene: currentScene,
             last_seen: new Date().toISOString(),
           })
           .eq("user_id", userId)
@@ -297,12 +315,12 @@ function GameInner({ userId }: { userId: string }) {
     }
     raf = requestAnimationFrame(loop);
     return () => cancelAnimationFrame(raf);
-  }, [userId, holdingHands, foundRoses]);
+  }, [userId, holdingHands, foundRoses, currentScene, scene]);
 
   // Pet AI: hop toward avg of players every 4s
   useEffect(() => {
     const iv = setInterval(async () => {
-      if (!pet) return;
+      if (!pet || currentScene !== "garden") return;
       const targets = Object.values(players).filter((p) => p.scene === "garden");
       if (targets.length === 0) return;
       const myX = meRef.current.x;
@@ -331,7 +349,7 @@ function GameInner({ userId }: { userId: string }) {
         .eq("id", 1);
     }, 4000);
     return () => clearInterval(iv);
-  }, [pet, partner, players]);
+  }, [pet, partner, players, currentScene]);
 
   // Camera / world transform
   const camera = useMemo(() => {
@@ -359,14 +377,14 @@ function GameInner({ userId }: { userId: string }) {
     const text = chatInput.trim().slice(0, 140);
     if (!text) return;
     setChatInput("");
-    await supabase.from("chat_messages").insert({ user_id: userId, text, scene: "garden" });
+    await supabase.from("chat_messages").insert({ user_id: userId, text, scene: currentScene });
   }
 
   async function dropRose() {
     await supabase.from("gifts").insert({
       from_user: userId,
       gift_type: "rose",
-      scene: "garden",
+      scene: currentScene,
       x: meRef.current.x,
       y: meRef.current.y + 30,
     });
@@ -386,7 +404,7 @@ function GameInner({ userId }: { userId: string }) {
     if (distance < 100 && partner) {
       setShowHeart(true);
       setTimeout(() => setShowHeart(false), 1400);
-      await supabase.from("chat_messages").insert({ user_id: userId, text: "💋", scene: "garden" });
+      await supabase.from("chat_messages").insert({ user_id: userId, text: "💋", scene: currentScene });
       await bumpMission("kiss_count", 1);
     }
   }
@@ -443,7 +461,7 @@ function GameInner({ userId }: { userId: string }) {
             height: WORLD_H,
             transform: `scale(${zoom}) translate(${-camera.x}px, ${-camera.y}px)`,
             transformOrigin: "0 0",
-            backgroundImage: `url(${worldBg})`,
+            backgroundImage: `url(${scene.bg})`,
             backgroundSize: "100% 100%",
             imageRendering: "auto",
           }}
@@ -489,8 +507,40 @@ function GameInner({ userId }: { userId: string }) {
             </button>
           ))}
 
-          {/* Pet */}
-          {pet && (
+          {/* Portals */}
+          {scene.portals.map((portal) => (
+            <div
+              key={`${portal.to}-${portal.x}`}
+              className="pointer-events-none absolute -translate-x-1/2 -translate-y-1/2"
+              style={{ left: portal.x, top: portal.y }}
+            >
+              <div
+                className="flex h-20 w-20 items-center justify-center rounded-full"
+                style={{
+                  background:
+                    "radial-gradient(circle, oklch(0.78 0.13 85 / 0.5) 0%, oklch(0.58 0.14 5 / 0.2) 70%, transparent 100%)",
+                  border: "2px dashed oklch(0.78 0.13 85 / 0.7)",
+                  boxShadow: "0 0 30px oklch(0.78 0.13 85 / 0.5)",
+                  animation: "float-heart 2s ease-in-out infinite alternate",
+                }}
+              >
+                <span className="text-3xl">{portal.emoji}</span>
+              </div>
+              <div
+                className="mt-1 text-center text-[10px] uppercase tracking-widest"
+                style={{
+                  fontFamily: "var(--font-heading)",
+                  color: "oklch(0.95 0.02 15)",
+                  textShadow: "0 2px 4px black",
+                }}
+              >
+                {portal.label}
+              </div>
+            </div>
+          ))}
+
+          {/* Pet (only in garden) */}
+          {pet && currentScene === "garden" && (
             <>
               <PetRabbit
                 x={Number(pet.x)}
@@ -534,7 +584,7 @@ function GameInner({ userId }: { userId: string }) {
 
           {/* Players */}
           {Object.values(players)
-            .filter((p) => p.scene === "garden")
+            .filter((p) => p.scene === currentScene)
             .map((p) => {
               const isMe = p.user_id === userId;
               const x = isMe ? meRef.current.x : Number(p.x);
@@ -589,7 +639,19 @@ function GameInner({ userId }: { userId: string }) {
             ← menu
           </Link>
           <DayCounter />
-          {pet && <PetStatus pet={pet} />}
+          <span
+            className="rounded-full px-2.5 py-1 text-[10px] uppercase tracking-widest"
+            style={{
+              background: "oklch(0.22 0.06 10 / 0.85)",
+              border: "1px solid oklch(0.78 0.13 85 / 0.4)",
+              color: "oklch(0.78 0.13 85)",
+              fontFamily: "var(--font-heading)",
+              backdropFilter: "blur(6px)",
+            }}
+          >
+            {scene.name}
+          </span>
+          {pet && currentScene === "garden" && <PetStatus pet={pet} />}
         </div>
         <div className="pointer-events-auto flex flex-wrap items-center gap-1.5">
           {partner ? (
