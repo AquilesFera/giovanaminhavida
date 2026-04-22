@@ -1,6 +1,4 @@
-import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
-import { useEffect } from "react";
-import { useAuth } from "@/lib/auth";
+import { createFileRoute, Link } from "@tanstack/react-router";
 
 export const Route = createFileRoute("/site")({
   head: () => ({
@@ -13,15 +11,6 @@ export const Route = createFileRoute("/site")({
 });
 
 function SitePage() {
-  const { user, loading } = useAuth();
-  const nav = useNavigate();
-
-  useEffect(() => {
-    if (!loading && !user) nav({ to: "/login" });
-  }, [user, loading, nav]);
-
-  if (loading || !user) return null;
-
   return (
     <div className="relative h-screen w-screen overflow-hidden bg-black">
       <iframe
@@ -30,7 +19,7 @@ function SitePage() {
         className="absolute inset-0 h-full w-full border-0"
       />
       <Link
-        to="/hub"
+        to="/"
         className="absolute left-3 top-3 z-50 flex h-9 items-center justify-center rounded-full border px-3 text-xs backdrop-blur"
         style={{
           background: "rgba(6,3,6,0.9)",
