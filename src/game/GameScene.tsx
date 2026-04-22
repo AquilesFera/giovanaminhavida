@@ -263,6 +263,28 @@ function GameInner({ userId }: { userId: string }) {
         }
       }
 
+      // Portal check
+      if (t > portalCooldownRef.current) {
+        for (const portal of scene.portals) {
+          const d = Math.hypot(meRef.current.x - portal.x, meRef.current.y - portal.y);
+          if (d < 60) {
+            portalCooldownRef.current = t + 1500;
+            meRef.current.x = portal.spawnX;
+            meRef.current.y = portal.spawnY;
+            void supabase
+              .from("player_state")
+              .update({
+                x: portal.spawnX,
+                y: portal.spawnY,
+                scene: portal.to,
+              })
+              .eq("user_id", userId);
+            setCurrentScene(portal.to);
+            break;
+          }
+        }
+      }
+
       // Holding hands timer mission
       if (holdingHands) {
         handsTimerRef.current += dt;
@@ -281,7 +303,7 @@ function GameInner({ userId }: { userId: string }) {
             y: meRef.current.y,
             direction: meRef.current.dir,
             is_online: true,
-            scene: "garden",
+            scene: currentScene,
             last_seen: new Date().toISOString(),
           })
           .eq("user_id", userId)
@@ -293,12 +315,12 @@ function GameInner({ userId }: { userId: string }) {
     }
     raf = requestAnimationFrame(loop);
     return () => cancelAnimationFrame(raf);
-  }, [userId, holdingHands, foundRoses]);
+  }, [userId, holdingHands, foundRoses, currentScene, scene]);
 
   // Pet AI: hop toward avg of players every 4s
   useEffect(() => {
     const iv = setInterval(async () => {
-      if (!pet) return;
+      if (!pet || currentScene !== "garden") return;
       const targets = Object.values(players).filter((p) => p.scene === "garden");
       if (targets.length === 0) return;
       const myX = meRef.current.x;
@@ -327,7 +349,7 @@ function GameInner({ userId }: { userId: string }) {
         .eq("id", 1);
     }, 4000);
     return () => clearInterval(iv);
-  }, [pet, partner, players]);
+  }, [pet, partner, players, currentScene]);
 
   // Camera / world transform
   const camera = useMemo(() => {
@@ -355,7 +377,7 @@ function GameInner({ userId }: { userId: string }) {
     const text = chatInput.trim().slice(0, 140);
     if (!text) return;
     setChatInput("");
-    await supabase.from("chat_messages").insert({ user_id: userId, text, scene: "garden" });
+    await supabase.from("chat_messages").insert({ user_id: userId, text, scene: currentScene });
   }
 
   async function dropRose() {
