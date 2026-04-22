@@ -30,13 +30,17 @@ export const Route = createRootRoute({
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "Mundinho do Casal 🌹" },
+      { title: "Mundinho da Giovana 🌹" },
       { name: "description", content: "Um mundinho 2D só pra nós dois." },
-      { property: "og:title", content: "Mundinho do Casal 🌹" },
+      { property: "og:title", content: "Mundinho da Giovana 🌹" },
       { property: "og:description", content: "Um mundinho 2D só pra nós dois." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
       { name: "twitter:site", content: "@Lovable" },
+      { name: "twitter:title", content: "Mundinho da Giovana 🌹" },
+      { name: "twitter:description", content: "Um mundinho 2D só pra nós dois." },
+      { property: "og:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/7b39fb09-6e44-4481-9fd6-185fd9e06621/id-preview-037e6d3c--6163524d-3559-4a22-b2d1-ba0ddcd51a39.lovable.app-1776874553245.png" },
+      { name: "twitter:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/7b39fb09-6e44-4481-9fd6-185fd9e06621/id-preview-037e6d3c--6163524d-3559-4a22-b2d1-ba0ddcd51a39.lovable.app-1776874553245.png" },
     ],
     links: [
       {
