@@ -9,7 +9,7 @@ import { DayCounter } from "@/components/DayCounter";
 import { PetRabbit } from "@/components/Pet";
 import { StoryBook } from "@/components/StoryBook";
 import { bumpMission, setMissionProgress } from "@/game/missions";
-import worldBg from "@/assets/world-map.jpg";
+import { SCENES, type SceneId } from "@/game/scenes";
 
 type Direction = "up" | "down" | "left" | "right";
 
@@ -51,19 +51,8 @@ type PetState = {
   last_pet: string;
 };
 
-const WORLD_W = 2400;
-const WORLD_H = 1600;
 const SPEED = 5;
 const AVATAR_SIZE = 72; // bigger sprites
-
-// Hidden roses placed around the map (mission: find_roses)
-const HIDDEN_ROSES = [
-  { id: "r1", x: 420, y: 380 },
-  { id: "r2", x: 1850, y: 520 },
-  { id: "r3", x: 1100, y: 1100 },
-  { id: "r4", x: 380, y: 1280 },
-  { id: "r5", x: 2050, y: 1300 },
-];
 
 export function GameScene() {
   const { user, loading } = useAuth();
