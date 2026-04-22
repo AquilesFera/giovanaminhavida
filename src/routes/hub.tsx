@@ -55,48 +55,32 @@ function HubPage() {
 
         <div className="mt-10 grid gap-5 md:grid-cols-2">
           {/* Site dela */}
-          <HubCard
-            emoji="💌"
-            title="Site dela"
-            subtitle="O cantinho dela na internet"
-            disabled={!siteUrl}
-            onClick={() => siteUrl && window.open(siteUrl, "_blank", "noopener,noreferrer")}
-            footer={
-              editingUrl ? (
-                <div className="flex gap-1.5">
-                  <input
-                    autoFocus
-                    value={draftUrl}
-                    onChange={(e) => setDraftUrl(e.target.value)}
-                    placeholder="https://..."
-                    className="flex-1 rounded-md bg-[oklch(0.15_0.03_10)] px-2 py-1 text-xs outline-none"
-                    style={{ color: "oklch(0.95 0.02 15)", border: "1px solid oklch(0.5 0.1 5 / 0.4)" }}
-                  />
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      saveUrl();
-                    }}
-                    className="rounded-md px-2 py-1 text-[10px] tracking-widest"
-                    style={{ background: "oklch(0.58 0.14 5)", color: "white" }}
-                  >
-                    OK
-                  </button>
-                </div>
-              ) : (
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setEditingUrl(true);
-                  }}
-                  className="text-[10px] uppercase tracking-widest opacity-70 hover:opacity-100"
-                  style={{ color: "oklch(0.78 0.13 85)" }}
-                >
-                  {siteUrl ? "✎ trocar link" : "✎ adicionar link"}
-                </button>
-              )
-            }
-          />
+          <Link
+            to="/site"
+            className="group block rounded-2xl border p-6 text-left transition-all hover:scale-[1.03]"
+            style={{
+              background: "linear-gradient(145deg, oklch(0.32 0.11 13 / 0.85), oklch(0.18 0.05 10 / 0.95))",
+              borderColor: "oklch(0.78 0.13 85 / 0.35)",
+              boxShadow: "0 20px 50px -15px oklch(0.1 0.03 10), inset 0 1px 0 oklch(0.78 0.13 85 / 0.2)",
+            }}
+          >
+            <div className="mb-3 text-5xl">💌</div>
+            <h2
+              className="text-2xl"
+              style={{ fontFamily: "var(--font-display)", color: "oklch(0.95 0.02 15)" }}
+            >
+              Site da Giovana
+            </h2>
+            <p className="mt-1 text-sm opacity-80" style={{ color: "oklch(0.85 0.04 15)" }}>
+              Nossa história, fotos, cartas, músicas, quiz e jogo da memória 🌹
+            </p>
+            <div
+              className="mt-4 inline-block text-[10px] uppercase tracking-[0.3em]"
+              style={{ fontFamily: "var(--font-heading)", color: "oklch(0.78 0.13 85)" }}
+            >
+              ABRIR →
+            </div>
+          </Link>
 
           {/* Jogo */}
           <Link
