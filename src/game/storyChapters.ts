@@ -80,4 +80,6 @@ export const MISSIONS: Mission[] = [
   { id: "hold_hands_long", title: "Mãos dadas", description: "Fiquem 30 segundos de mãos dadas", goal: 30, emoji: "💕" },
   { id: "feed_pet", title: "Cuidando da Mel", description: "Alimente a Mel 3 vezes", goal: 3, emoji: "🥕" },
   { id: "kiss_count", title: "Beijinhos", description: "Deem 5 beijinhos um no outro", goal: 5, emoji: "💋" },
+  { id: "light_bonfire", title: "Fogueira na praia", description: "Acendam a fogueira na Praia da Lua", goal: 1, emoji: "🔥" },
+  { id: "find_letter", title: "Carta escondida", description: "Achem a carta romântica na Casinha", goal: 1, emoji: "💌" },
 ];

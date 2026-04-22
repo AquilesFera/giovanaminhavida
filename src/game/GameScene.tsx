@@ -10,6 +10,7 @@ import { PetRabbit } from "@/components/Pet";
 import { StoryBook } from "@/components/StoryBook";
 import { bumpMission, setMissionProgress } from "@/game/missions";
 import { SCENES, type SceneId } from "@/game/scenes";
+import { MISSIONS } from "@/game/storyChapters";
 
 type Direction = "up" | "down" | "left" | "right";
 
@@ -85,6 +86,10 @@ function GameInner({ userId }: { userId: string }) {
   const [pet, setPet] = useState<PetState | null>(null);
   const [foundRoses, setFoundRoses] = useState<Set<string>>(new Set());
   const [petBubble, setPetBubble] = useState<string | null>(null);
+  const [missionsDone, setMissionsDone] = useState<Set<string>>(new Set());
+  const [reward, setReward] = useState<{ emoji: string; text: string } | null>(null);
+  const [bonfireLit, setBonfireLit] = useState(false);
+  const [letterFound, setLetterFound] = useState(false);
 
   const meRef = useRef({ x: 1200, y: 800, dir: "down" as Direction, walking: false });
   const keysRef = useRef<Record<string, boolean>>({});
@@ -141,6 +146,14 @@ function GameInner({ userId }: { userId: string }) {
       if (cs) setChats(cs as ChatMsg[]);
       if (petData) setPet(petData as PetState);
 
+      const { data: mProg } = await supabase.from("missions_progress").select("*");
+      if (mProg && mounted) {
+        const done = new Set(mProg.filter((m) => m.completed).map((m) => m.mission_id));
+        setMissionsDone(done);
+        setBonfireLit(done.has("light_bonfire"));
+        setLetterFound(done.has("find_letter"));
+      }
+
       await supabase
         .from("player_state")
         .upsert({ user_id: userId, is_online: true, scene: currentScene });
@@ -169,6 +182,21 @@ function GameInner({ userId }: { userId: string }) {
       )
       .on("postgres_changes", { event: "*", schema: "public", table: "pet_state" }, (p) => {
         if (p.new) setPet(p.new as PetState);
+      })
+      .on("postgres_changes", { event: "*", schema: "public", table: "missions_progress" }, (p) => {
+        const row = p.new as { mission_id: string; completed: boolean };
+        if (row?.completed) {
+          setMissionsDone((s) => {
+            if (s.has(row.mission_id)) return s;
+            const next = new Set(s);
+            next.add(row.mission_id);
+            const m = MISSIONS.find((x) => x.id === row.mission_id);
+            if (m) setReward({ emoji: m.emoji, text: `${m.title} concluída!` });
+            if (row.mission_id === "light_bonfire") setBonfireLit(true);
+            if (row.mission_id === "find_letter") setLetterFound(true);
+            return next;
+          });
+        }
       })
       .subscribe();
 
@@ -260,6 +288,18 @@ function GameInner({ userId }: { userId: string }) {
         if (d < 50) {
           setFoundRoses((s) => new Set(s).add(r.id));
           bumpMission("find_roses", 1);
+        }
+      }
+
+      // Hidden letter pickup (house)
+      if (currentScene === "house" && scene.hiddenLetter && !letterFound) {
+        const d = Math.hypot(
+          meRef.current.x - scene.hiddenLetter.x,
+          meRef.current.y - scene.hiddenLetter.y
+        );
+        if (d < 60) {
+          setLetterFound(true);
+          bumpMission("find_letter", 1);
         }
       }
 
@@ -437,6 +477,26 @@ function GameInner({ userId }: { userId: string }) {
       .eq("id", 1);
   }
 
+  async function lightBonfire() {
+    if (currentScene !== "beach" || !scene.bonfire || bonfireLit) return;
+    const d = Math.hypot(meRef.current.x - scene.bonfire.x, meRef.current.y - scene.bonfire.y);
+    if (d > 110) return;
+    setBonfireLit(true);
+    await bumpMission("light_bonfire", 1);
+  }
+
+  // Auto-dismiss reward toast
+  useEffect(() => {
+    if (!reward) return;
+    const t = setTimeout(() => setReward(null), 3500);
+    return () => clearTimeout(t);
+  }, [reward]);
+
+  const distanceToBonfire =
+    currentScene === "beach" && scene.bonfire
+      ? Math.hypot(meRef.current.x - scene.bonfire.x, meRef.current.y - scene.bonfire.y)
+      : Infinity;
+
   // Latest chat per user
   const latestChat: Record<string, ChatMsg | undefined> = {};
   for (const c of chats) {
@@ -482,6 +542,44 @@ function GameInner({ userId }: { userId: string }) {
                 </span>
               </div>
             )
+          )}
+
+          {/* Bonfire (beach) */}
+          {currentScene === "beach" && scene.bonfire && (
+            <div
+              className="pointer-events-none absolute -translate-x-1/2 -translate-y-1/2"
+              style={{ left: scene.bonfire.x, top: scene.bonfire.y }}
+            >
+              <span
+                className="text-5xl"
+                style={{
+                  filter: bonfireLit
+                    ? "drop-shadow(0 0 20px oklch(0.75 0.2 50)) drop-shadow(0 0 40px oklch(0.7 0.22 35))"
+                    : "grayscale(0.6) drop-shadow(0 2px 4px black)",
+                  animation: bonfireLit ? "float-heart 0.6s ease-in-out infinite alternate" : "none",
+                }}
+              >
+                {bonfireLit ? "🔥" : "🪵"}
+              </span>
+            </div>
+          )}
+
+          {/* Hidden letter (house) */}
+          {currentScene === "house" && scene.hiddenLetter && !letterFound && (
+            <div
+              className="pointer-events-none absolute -translate-x-1/2 -translate-y-1/2"
+              style={{ left: scene.hiddenLetter.x, top: scene.hiddenLetter.y }}
+            >
+              <span
+                className="text-3xl"
+                style={{
+                  filter: "drop-shadow(0 0 12px oklch(0.78 0.13 85))",
+                  animation: "float-heart 2s ease-in-out infinite alternate",
+                }}
+              >
+                💌
+              </span>
+            </div>
           )}
 
           {/* Gifts */}
@@ -674,7 +772,7 @@ function GameInner({ userId }: { userId: string }) {
       </div>
 
       {/* Mission hint when finding roses */}
-      {foundRoses.size > 0 && foundRoses.size < HIDDEN_ROSES.length && (
+      {currentScene === "garden" && foundRoses.size > 0 && foundRoses.size < HIDDEN_ROSES.length && (
         <div
           className="pointer-events-none absolute left-1/2 top-14 z-20 -translate-x-1/2 rounded-full px-3 py-1 text-[10px] uppercase tracking-widest"
           style={{
@@ -689,6 +787,44 @@ function GameInner({ userId }: { userId: string }) {
         </div>
       )}
 
+      {/* Per-scene mission hint */}
+      <SceneMissionHint
+        scene={currentScene}
+        bonfireLit={bonfireLit}
+        letterFound={letterFound}
+        rosesFound={foundRoses.size}
+        rosesTotal={HIDDEN_ROSES.length}
+        missionsDone={missionsDone}
+      />
+
+      {/* Reward toast */}
+      {reward && (
+        <div
+          className="pointer-events-none absolute left-1/2 top-24 z-50 -translate-x-1/2 rounded-2xl border px-5 py-3 text-center"
+          style={{
+            background: "linear-gradient(135deg, oklch(0.3 0.12 5 / 0.95), oklch(0.22 0.08 10 / 0.95))",
+            borderColor: "oklch(0.78 0.13 85 / 0.6)",
+            boxShadow: "0 10px 40px oklch(0.78 0.13 85 / 0.4)",
+            backdropFilter: "blur(8px)",
+            animation: "float-heart 0.6s ease-out",
+          }}
+        >
+          <div className="text-3xl">{reward.emoji}</div>
+          <div
+            className="mt-1 text-[11px] uppercase tracking-widest"
+            style={{ color: "oklch(0.78 0.13 85)", fontFamily: "var(--font-heading)" }}
+          >
+            ✨ recompensa
+          </div>
+          <div
+            className="text-sm"
+            style={{ color: "oklch(0.95 0.02 15)", fontFamily: "var(--font-body)" }}
+          >
+            {reward.text}
+          </div>
+        </div>
+      )}
+
       {/* Bottom controls */}
       <div className="absolute inset-x-0 bottom-0 z-30 px-2 pb-2">
         <div className="mx-auto flex max-w-3xl items-end gap-2">
@@ -700,6 +836,13 @@ function GameInner({ userId }: { userId: string }) {
               <ActionBtn label="Beijo 💋" onClick={blow} disabled={distance >= 100 || !partner} />
               <ActionBtn label="Cenoura 🥕" onClick={feedPet} disabled={distanceToPet >= 120} />
               <ActionBtn label="Carinho 🤗" onClick={petPet} disabled={distanceToPet >= 120} />
+              {currentScene === "beach" && !bonfireLit && (
+                <ActionBtn
+                  label="Acender 🔥"
+                  onClick={lightBonfire}
+                  disabled={distanceToBonfire >= 110}
+                />
+              )}
             </div>
             <form onSubmit={sendChat} className="flex gap-1.5">
               <input
@@ -842,6 +985,52 @@ function Bar({ value, color, title }: { value: number; color: string; title: str
   return (
     <div title={title} className="h-1.5 w-8 overflow-hidden rounded-full" style={{ background: "oklch(0.15 0.03 10)" }}>
       <div className="h-full transition-all" style={{ width: `${Math.max(0, Math.min(100, value))}%`, background: color }} />
+    </div>
+  );
+}
+
+function SceneMissionHint({
+  scene,
+  bonfireLit,
+  letterFound,
+  rosesFound,
+  rosesTotal,
+  missionsDone,
+}: {
+  scene: SceneId;
+  bonfireLit: boolean;
+  letterFound: boolean;
+  rosesFound: number;
+  rosesTotal: number;
+  missionsDone: Set<string>;
+}) {
+  let label = "";
+  if (scene === "beach") {
+    label = bonfireLit
+      ? "🔥 fogueira acesa — missão completa"
+      : "🪵 ache a pilha de lenha e acenda a fogueira";
+  } else if (scene === "house") {
+    label = letterFound
+      ? "💌 carta encontrada — missão completa"
+      : "💌 procure a carta romântica escondida";
+  } else if (scene === "garden") {
+    if (missionsDone.has("find_roses")) return null;
+    if (rosesFound === 0) label = `🌹 caça às rosas: 0/${rosesTotal}`;
+    else return null; // outro indicador já mostra
+  }
+  if (!label) return null;
+  return (
+    <div
+      className="pointer-events-none absolute left-1/2 top-14 z-20 -translate-x-1/2 whitespace-nowrap rounded-full px-3 py-1 text-[10px] uppercase tracking-widest"
+      style={{
+        background: "oklch(0.22 0.06 10 / 0.9)",
+        border: "1px solid oklch(0.78 0.13 85 / 0.4)",
+        color: "oklch(0.78 0.13 85)",
+        fontFamily: "var(--font-heading)",
+        backdropFilter: "blur(6px)",
+      }}
+    >
+      {label}
     </div>
   );
 }
