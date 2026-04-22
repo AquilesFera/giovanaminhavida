@@ -24,7 +24,7 @@ function LoginPage() {
   const [busy, setBusy] = useState(false);
 
   useEffect(() => {
-    if (!loading && user) nav({ to: "/" });
+    if (!loading && user) nav({ to: "/hub" });
   }, [user, loading, nav]);
 
   async function submit(e: React.FormEvent) {
@@ -37,7 +37,7 @@ function LoginPage() {
         : await signUp(email, password, name || "Amor");
     setBusy(false);
     if (res.error) setErr(res.error);
-    else nav({ to: "/" });
+    else nav({ to: "/hub" });
   }
 
   return (

@@ -41,14 +41,20 @@ export type Database = {
       couple_meta: {
         Row: {
           anniversary_date: string
+          couple_name: string | null
+          her_site_url: string | null
           id: number
         }
         Insert: {
           anniversary_date?: string
+          couple_name?: string | null
+          her_site_url?: string | null
           id?: number
         }
         Update: {
           anniversary_date?: string
+          couple_name?: string | null
+          her_site_url?: string | null
           id?: number
         }
         Relationships: []
@@ -84,6 +90,66 @@ export type Database = {
           message?: string | null
           opened?: boolean
           scene?: string
+          x?: number
+          y?: number
+        }
+        Relationships: []
+      }
+      missions_progress: {
+        Row: {
+          completed: boolean
+          completed_at: string | null
+          mission_id: string
+          progress: number
+          updated_at: string
+        }
+        Insert: {
+          completed?: boolean
+          completed_at?: string | null
+          mission_id: string
+          progress?: number
+          updated_at?: string
+        }
+        Update: {
+          completed?: boolean
+          completed_at?: string | null
+          mission_id?: string
+          progress?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      pet_state: {
+        Row: {
+          happiness: number
+          hunger: number
+          id: number
+          last_fed: string
+          last_pet: string
+          name: string
+          updated_at: string
+          x: number
+          y: number
+        }
+        Insert: {
+          happiness?: number
+          hunger?: number
+          id?: number
+          last_fed?: string
+          last_pet?: string
+          name?: string
+          updated_at?: string
+          x?: number
+          y?: number
+        }
+        Update: {
+          happiness?: number
+          hunger?: number
+          id?: number
+          last_fed?: string
+          last_pet?: string
+          name?: string
+          updated_at?: string
           x?: number
           y?: number
         }
@@ -143,6 +209,24 @@ export type Database = {
           created_at?: string
           display_name?: string
           id?: string
+        }
+        Relationships: []
+      }
+      story_progress: {
+        Row: {
+          chapter_id: number
+          unlocked: boolean
+          unlocked_at: string | null
+        }
+        Insert: {
+          chapter_id: number
+          unlocked?: boolean
+          unlocked_at?: string | null
+        }
+        Update: {
+          chapter_id?: number
+          unlocked?: boolean
+          unlocked_at?: string | null
         }
         Relationships: []
       }

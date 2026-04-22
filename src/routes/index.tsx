@@ -1,5 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { GardenScene } from "@/components/GardenScene";
+import { useEffect } from "react";
+import { useNavigate } from "@tanstack/react-router";
+import { useAuth } from "@/lib/auth";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -12,5 +14,19 @@ export const Route = createFileRoute("/")({
 });
 
 function Index() {
-  return <GardenScene />;
+  const { user, loading } = useAuth();
+  const nav = useNavigate();
+  useEffect(() => {
+    if (loading) return;
+    if (user) nav({ to: "/hub" });
+    else nav({ to: "/login" });
+  }, [user, loading, nav]);
+  return (
+    <div
+      className="flex min-h-screen items-center justify-center"
+      style={{ background: "oklch(0.13 0.04 10)" }}
+    >
+      <div className="text-4xl">🌹</div>
+    </div>
+  );
 }
