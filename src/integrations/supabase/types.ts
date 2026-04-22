@@ -21,6 +21,7 @@ export type Database = {
           scene: string
           text: string
           user_id: string
+          world_code: string | null
         }
         Insert: {
           created_at?: string
@@ -28,6 +29,7 @@ export type Database = {
           scene?: string
           text: string
           user_id: string
+          world_code?: string | null
         }
         Update: {
           created_at?: string
@@ -35,6 +37,7 @@ export type Database = {
           scene?: string
           text?: string
           user_id?: string
+          world_code?: string | null
         }
         Relationships: []
       }
@@ -68,6 +71,7 @@ export type Database = {
           message: string | null
           opened: boolean
           scene: string
+          world_code: string | null
           x: number
           y: number
         }
@@ -79,6 +83,7 @@ export type Database = {
           message?: string | null
           opened?: boolean
           scene?: string
+          world_code?: string | null
           x: number
           y: number
         }
@@ -90,6 +95,7 @@ export type Database = {
           message?: string | null
           opened?: boolean
           scene?: string
+          world_code?: string | null
           x?: number
           y?: number
         }
@@ -102,6 +108,7 @@ export type Database = {
           mission_id: string
           progress: number
           updated_at: string
+          world_code: string
         }
         Insert: {
           completed?: boolean
@@ -109,6 +116,7 @@ export type Database = {
           mission_id: string
           progress?: number
           updated_at?: string
+          world_code: string
         }
         Update: {
           completed?: boolean
@@ -116,6 +124,7 @@ export type Database = {
           mission_id?: string
           progress?: number
           updated_at?: string
+          world_code?: string
         }
         Relationships: []
       }
@@ -123,33 +132,33 @@ export type Database = {
         Row: {
           happiness: number
           hunger: number
-          id: number
           last_fed: string
           last_pet: string
           name: string
           updated_at: string
+          world_code: string
           x: number
           y: number
         }
         Insert: {
           happiness?: number
           hunger?: number
-          id?: number
           last_fed?: string
           last_pet?: string
           name?: string
           updated_at?: string
+          world_code: string
           x?: number
           y?: number
         }
         Update: {
           happiness?: number
           hunger?: number
-          id?: number
           last_fed?: string
           last_pet?: string
           name?: string
           updated_at?: string
+          world_code?: string
           x?: number
           y?: number
         }
@@ -164,6 +173,7 @@ export type Database = {
           scene: string
           updated_at: string
           user_id: string
+          world_code: string | null
           x: number
           y: number
         }
@@ -175,6 +185,7 @@ export type Database = {
           scene?: string
           updated_at?: string
           user_id: string
+          world_code?: string | null
           x?: number
           y?: number
         }
@@ -186,6 +197,7 @@ export type Database = {
           scene?: string
           updated_at?: string
           user_id?: string
+          world_code?: string | null
           x?: number
           y?: number
         }
@@ -217,16 +229,19 @@ export type Database = {
           chapter_id: number
           unlocked: boolean
           unlocked_at: string | null
+          world_code: string
         }
         Insert: {
           chapter_id: number
           unlocked?: boolean
           unlocked_at?: string | null
+          world_code: string
         }
         Update: {
           chapter_id?: number
           unlocked?: boolean
           unlocked_at?: string | null
+          world_code?: string
         }
         Relationships: []
       }
@@ -237,6 +252,7 @@ export type Database = {
           id: string
           text: string
           user_id: string
+          world_code: string | null
         }
         Insert: {
           color?: string
@@ -244,6 +260,7 @@ export type Database = {
           id?: string
           text: string
           user_id: string
+          world_code?: string | null
         }
         Update: {
           color?: string
@@ -251,6 +268,25 @@ export type Database = {
           id?: string
           text?: string
           user_id?: string
+          world_code?: string | null
+        }
+        Relationships: []
+      }
+      worlds: {
+        Row: {
+          code: string
+          created_at: string
+          created_by: string
+        }
+        Insert: {
+          code: string
+          created_at?: string
+          created_by: string
+        }
+        Update: {
+          code?: string
+          created_at?: string
+          created_by?: string
         }
         Relationships: []
       }
