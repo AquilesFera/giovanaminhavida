@@ -1,7 +1,6 @@
 import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { useAuth } from "@/lib/auth";
-import { supabase } from "@/integrations/supabase/client";
 import { Petals } from "@/components/Petals";
 
 export const Route = createFileRoute("/hub")({
@@ -17,34 +16,10 @@ export const Route = createFileRoute("/hub")({
 function HubPage() {
   const { user, loading, signOut } = useAuth();
   const nav = useNavigate();
-  const [siteUrl, setSiteUrl] = useState<string | null>(null);
-  const [editingUrl, setEditingUrl] = useState(false);
-  const [draftUrl, setDraftUrl] = useState("");
 
   useEffect(() => {
     if (!loading && !user) nav({ to: "/login" });
   }, [user, loading, nav]);
-
-  useEffect(() => {
-    supabase
-      .from("couple_meta")
-      .select("her_site_url")
-      .eq("id", 1)
-      .maybeSingle()
-      .then(({ data }) => {
-        const url = (data as { her_site_url?: string | null } | null)?.her_site_url ?? null;
-        setSiteUrl(url);
-        setDraftUrl(url ?? "");
-      });
-  }, []);
-
-  async function saveUrl() {
-    let url = draftUrl.trim();
-    if (url && !/^https?:\/\//i.test(url)) url = "https://" + url;
-    setSiteUrl(url || null);
-    setEditingUrl(false);
-    await supabase.from("couple_meta").update({ her_site_url: url || null }).eq("id", 1);
-  }
 
   if (loading || !user) return null;
 
