@@ -14,7 +14,162 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      chat_messages: {
+        Row: {
+          created_at: string
+          id: string
+          scene: string
+          text: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          scene?: string
+          text: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          scene?: string
+          text?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      couple_meta: {
+        Row: {
+          anniversary_date: string
+          id: number
+        }
+        Insert: {
+          anniversary_date?: string
+          id?: number
+        }
+        Update: {
+          anniversary_date?: string
+          id?: number
+        }
+        Relationships: []
+      }
+      gifts: {
+        Row: {
+          created_at: string
+          from_user: string
+          gift_type: string
+          id: string
+          message: string | null
+          opened: boolean
+          scene: string
+          x: number
+          y: number
+        }
+        Insert: {
+          created_at?: string
+          from_user: string
+          gift_type?: string
+          id?: string
+          message?: string | null
+          opened?: boolean
+          scene?: string
+          x: number
+          y: number
+        }
+        Update: {
+          created_at?: string
+          from_user?: string
+          gift_type?: string
+          id?: string
+          message?: string | null
+          opened?: boolean
+          scene?: string
+          x?: number
+          y?: number
+        }
+        Relationships: []
+      }
+      player_state: {
+        Row: {
+          direction: string
+          holding_hands: boolean
+          is_online: boolean
+          last_seen: string
+          scene: string
+          updated_at: string
+          user_id: string
+          x: number
+          y: number
+        }
+        Insert: {
+          direction?: string
+          holding_hands?: boolean
+          is_online?: boolean
+          last_seen?: string
+          scene?: string
+          updated_at?: string
+          user_id: string
+          x?: number
+          y?: number
+        }
+        Update: {
+          direction?: string
+          holding_hands?: boolean
+          is_online?: boolean
+          last_seen?: string
+          scene?: string
+          updated_at?: string
+          user_id?: string
+          x?: number
+          y?: number
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          avatar_color: string
+          created_at: string
+          display_name: string
+          id: string
+        }
+        Insert: {
+          avatar_color?: string
+          created_at?: string
+          display_name?: string
+          id: string
+        }
+        Update: {
+          avatar_color?: string
+          created_at?: string
+          display_name?: string
+          id?: string
+        }
+        Relationships: []
+      }
+      wall_notes: {
+        Row: {
+          color: string
+          created_at: string
+          id: string
+          text: string
+          user_id: string
+        }
+        Insert: {
+          color?: string
+          created_at?: string
+          id?: string
+          text: string
+          user_id: string
+        }
+        Update: {
+          color?: string
+          created_at?: string
+          id?: string
+          text?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
