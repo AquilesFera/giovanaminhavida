@@ -919,7 +919,7 @@ function GameInner({ userId, worldCode }: { userId: string; worldCode: string })
             backdropFilter: "blur(6px)",
           }}
         >
-          ✨ rosas encontradas: {foundRoses.size}/{HIDDEN_ROSES.length}
+          ✨ lembranças da festa: {foundRoses.size}/{HIDDEN_ROSES.length}
         </div>
       )}
 
@@ -931,6 +931,11 @@ function GameInner({ userId, worldCode }: { userId: string; worldCode: string })
         rosesFound={foundRoses.size}
         rosesTotal={HIDDEN_ROSES.length}
         missionsDone={missionsDone}
+        beersFound={collectedBeers.size}
+        beersTotal={BEERS.length}
+        popcornsFound={collectedPopcorns.size}
+        popcornsTotal={POPCORNS.length}
+        photosFound={foundPhotos.size}
       />
 
       {/* Reward toast */}
