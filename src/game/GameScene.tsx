@@ -90,6 +90,10 @@ function GameInner({ userId, worldCode }: { userId: string; worldCode: string })
   const [reward, setReward] = useState<{ emoji: string; text: string } | null>(null);
   const [bonfireLit, setBonfireLit] = useState(false);
   const [letterFound, setLetterFound] = useState(false);
+  const [collectedBeers, setCollectedBeers] = useState<Set<string>>(new Set());
+  const [collectedPopcorns, setCollectedPopcorns] = useState<Set<string>>(new Set());
+  const [foundPhotos, setFoundPhotos] = useState<Set<string>>(new Set());
+  const [openPhoto, setOpenPhoto] = useState<{ url: string; caption: string } | null>(null);
 
   const meRef = useRef({ x: 1200, y: 800, dir: "down" as Direction, walking: false });
   const keysRef = useRef<Record<string, boolean>>({});
@@ -106,6 +110,9 @@ function GameInner({ userId, worldCode }: { userId: string; worldCode: string })
   const WORLD_W = scene.width;
   const WORLD_H = scene.height;
   const HIDDEN_ROSES = scene.hiddenRoses ?? [];
+  const ALBUM_PHOTOS = scene.albumPhotos ?? [];
+  const BEERS = scene.beers ?? [];
+  const POPCORNS = scene.popcorns ?? [];
 
   const me = players[userId];
   const partnerEntry = Object.entries(players).find(([id]) => id !== userId);
