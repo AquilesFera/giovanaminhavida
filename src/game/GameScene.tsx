@@ -90,6 +90,10 @@ function GameInner({ userId, worldCode }: { userId: string; worldCode: string })
   const [reward, setReward] = useState<{ emoji: string; text: string } | null>(null);
   const [bonfireLit, setBonfireLit] = useState(false);
   const [letterFound, setLetterFound] = useState(false);
+  const [collectedBeers, setCollectedBeers] = useState<Set<string>>(new Set());
+  const [collectedPopcorns, setCollectedPopcorns] = useState<Set<string>>(new Set());
+  const [foundPhotos, setFoundPhotos] = useState<Set<string>>(new Set());
+  const [openPhoto, setOpenPhoto] = useState<{ url: string; caption: string } | null>(null);
 
   const meRef = useRef({ x: 1200, y: 800, dir: "down" as Direction, walking: false });
   const keysRef = useRef<Record<string, boolean>>({});
@@ -106,6 +110,9 @@ function GameInner({ userId, worldCode }: { userId: string; worldCode: string })
   const WORLD_W = scene.width;
   const WORLD_H = scene.height;
   const HIDDEN_ROSES = scene.hiddenRoses ?? [];
+  const ALBUM_PHOTOS = scene.albumPhotos ?? [];
+  const BEERS = scene.beers ?? [];
+  const POPCORNS = scene.popcorns ?? [];
 
   const me = players[userId];
   const partnerEntry = Object.entries(players).find(([id]) => id !== userId);
@@ -310,7 +317,42 @@ function GameInner({ userId, worldCode }: { userId: string; worldCode: string })
         const d = Math.hypot(meRef.current.x - r.x, meRef.current.y - r.y);
         if (d < 50) {
           setFoundRoses((s) => new Set(s).add(r.id));
-          bumpMission("find_roses", worldCode, 1);
+          bumpMission("festa_nacoes", worldCode, 1);
+        }
+      }
+
+      // Beer pickup (Major bar)
+      if (currentScene === "beach") {
+        for (const b of BEERS) {
+          if (collectedBeers.has(b.id)) continue;
+          const d = Math.hypot(meRef.current.x - b.x, meRef.current.y - b.y);
+          if (d < 55) {
+            setCollectedBeers((s) => new Set(s).add(b.id));
+            bumpMission("major_brindes", worldCode, 1);
+          }
+        }
+      }
+
+      // Popcorn pickup (Cinema)
+      if (currentScene === "house") {
+        for (const pc of POPCORNS) {
+          if (collectedPopcorns.has(pc.id)) continue;
+          const d = Math.hypot(meRef.current.x - pc.x, meRef.current.y - pc.y);
+          if (d < 55) {
+            setCollectedPopcorns((s) => new Set(s).add(pc.id));
+            bumpMission("cinema_pipocas", worldCode, 1);
+          }
+        }
+      }
+
+      // Album photo pickup (any scene)
+      for (const ph of ALBUM_PHOTOS) {
+        if (foundPhotos.has(ph.id)) continue;
+        const d = Math.hypot(meRef.current.x - ph.x, meRef.current.y - ph.y);
+        if (d < 55) {
+          setFoundPhotos((s) => new Set(s).add(ph.id));
+          setOpenPhoto({ url: ph.url, caption: ph.caption });
+          bumpMission("album_secreto", worldCode, 1);
         }
       }
 
@@ -378,7 +420,7 @@ function GameInner({ userId, worldCode }: { userId: string; worldCode: string })
     }
     raf = requestAnimationFrame(loop);
     return () => cancelAnimationFrame(raf);
-  }, [userId, holdingHands, foundRoses, currentScene, scene]);
+  }, [userId, holdingHands, foundRoses, currentScene, scene, collectedBeers, collectedPopcorns, foundPhotos, BEERS, POPCORNS, ALBUM_PHOTOS, HIDDEN_ROSES, letterFound, worldCode]);
 
   // Pet AI: hop toward avg of players every 4s
   useEffect(() => {
@@ -610,6 +652,72 @@ function GameInner({ userId, worldCode }: { userId: string; worldCode: string })
             </div>
           )}
 
+          {/* Beers (Major) */}
+          {BEERS.map((b) =>
+            collectedBeers.has(b.id) ? null : (
+              <div
+                key={b.id}
+                className="pointer-events-none absolute -translate-x-1/2 -translate-y-1/2"
+                style={{ left: b.x, top: b.y }}
+              >
+                <span
+                  className="text-3xl"
+                  style={{
+                    filter: "drop-shadow(0 0 10px oklch(0.78 0.13 85))",
+                    animation: "float-heart 1.6s ease-in-out infinite alternate",
+                  }}
+                >
+                  🍺
+                </span>
+              </div>
+            )
+          )}
+
+          {/* Popcorns (Cinema) */}
+          {POPCORNS.map((pc) =>
+            collectedPopcorns.has(pc.id) ? null : (
+              <div
+                key={pc.id}
+                className="pointer-events-none absolute -translate-x-1/2 -translate-y-1/2"
+                style={{ left: pc.x, top: pc.y }}
+              >
+                <span
+                  className="text-3xl"
+                  style={{
+                    filter: "drop-shadow(0 0 10px oklch(0.78 0.13 85))",
+                    animation: "float-heart 1.6s ease-in-out infinite alternate",
+                  }}
+                >
+                  🍿
+                </span>
+              </div>
+            )
+          )}
+
+          {/* Album photos (any scene) */}
+          {ALBUM_PHOTOS.map((ph) =>
+            foundPhotos.has(ph.id) ? null : (
+              <div
+                key={ph.id}
+                className="pointer-events-none absolute -translate-x-1/2 -translate-y-1/2"
+                style={{ left: ph.x, top: ph.y }}
+              >
+                <div
+                  className="flex h-12 w-12 items-center justify-center rounded-lg border-2"
+                  style={{
+                    background: "oklch(0.95 0.02 15 / 0.9)",
+                    borderColor: "oklch(0.78 0.13 85)",
+                    boxShadow: "0 0 16px oklch(0.78 0.13 85 / 0.6)",
+                    transform: "rotate(-6deg)",
+                    animation: "float-heart 2s ease-in-out infinite alternate",
+                  }}
+                >
+                  <span className="text-2xl">📸</span>
+                </div>
+              </div>
+            )
+          )}
+
           {/* Gifts */}
           {gifts.map((g) => (
             <button
@@ -811,7 +919,7 @@ function GameInner({ userId, worldCode }: { userId: string; worldCode: string })
             backdropFilter: "blur(6px)",
           }}
         >
-          ✨ rosas encontradas: {foundRoses.size}/{HIDDEN_ROSES.length}
+          ✨ lembranças da festa: {foundRoses.size}/{HIDDEN_ROSES.length}
         </div>
       )}
 
@@ -823,6 +931,11 @@ function GameInner({ userId, worldCode }: { userId: string; worldCode: string })
         rosesFound={foundRoses.size}
         rosesTotal={HIDDEN_ROSES.length}
         missionsDone={missionsDone}
+        beersFound={collectedBeers.size}
+        beersTotal={BEERS.length}
+        popcornsFound={collectedPopcorns.size}
+        popcornsTotal={POPCORNS.length}
+        photosFound={foundPhotos.size}
       />
 
       {/* Reward toast */}
@@ -906,6 +1019,41 @@ function GameInner({ userId, worldCode }: { userId: string; worldCode: string })
         />
       )}
       {showStory && <StoryBook worldCode={worldCode} onClose={() => setShowStory(false)} />}
+
+      {/* Photo lightbox */}
+      {openPhoto && (
+        <div
+          className="fixed inset-0 z-[60] flex items-center justify-center p-4"
+          style={{ background: "oklch(0.04 0.01 10 / 0.95)" }}
+          onClick={() => setOpenPhoto(null)}
+        >
+          <div
+            className="relative max-h-[90vh] max-w-[90vw] overflow-hidden rounded-2xl border-2"
+            style={{ borderColor: "oklch(0.78 0.13 85)", boxShadow: "0 20px 60px oklch(0.78 0.13 85 / 0.4)" }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <img src={openPhoto.url} alt={openPhoto.caption} className="max-h-[80vh] max-w-[90vw] object-contain" />
+            <div
+              className="absolute inset-x-0 bottom-0 px-4 py-3 text-center text-sm"
+              style={{
+                background: "linear-gradient(to top, oklch(0.04 0.01 10 / 0.95), transparent)",
+                color: "oklch(0.78 0.13 85)",
+                fontFamily: "var(--font-heading)",
+              }}
+            >
+              {openPhoto.caption}
+            </div>
+            <button
+              onClick={() => setOpenPhoto(null)}
+              className="absolute right-2 top-2 flex h-9 w-9 items-center justify-center rounded-full text-lg"
+              style={{ background: "oklch(0.04 0.01 10 / 0.8)", color: "oklch(0.78 0.13 85)" }}
+              aria-label="fechar"
+            >
+              ✕
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -1031,6 +1179,11 @@ function SceneMissionHint({
   rosesFound,
   rosesTotal,
   missionsDone,
+  beersFound,
+  beersTotal,
+  popcornsFound,
+  popcornsTotal,
+  photosFound,
 }: {
   scene: SceneId;
   bonfireLit: boolean;
@@ -1038,20 +1191,37 @@ function SceneMissionHint({
   rosesFound: number;
   rosesTotal: number;
   missionsDone: Set<string>;
+  beersFound: number;
+  beersTotal: number;
+  popcornsFound: number;
+  popcornsTotal: number;
+  photosFound: number;
 }) {
   let label = "";
   if (scene === "beach") {
-    label = bonfireLit
-      ? "🔥 fogueira acesa — missão completa"
-      : "🪵 ache a pilha de lenha e acenda a fogueira";
+    if (!missionsDone.has("major_brindes")) {
+      label = `🍺 brinde no Major: ${beersFound}/${beersTotal}`;
+    } else if (!bonfireLit) {
+      label = "🪵 acenda a fogueirinha do bar";
+    } else {
+      label = "🔥 missão completa — saúde 🍻";
+    }
   } else if (scene === "house") {
-    label = letterFound
-      ? "💌 carta encontrada — missão completa"
-      : "💌 procure a carta romântica escondida";
+    if (!missionsDone.has("cinema_pipocas")) {
+      label = `🍿 sessão de cinema: ${popcornsFound}/${popcornsTotal}`;
+    } else if (!letterFound) {
+      label = "💌 procure a carta romântica escondida";
+    } else {
+      label = "🎬 sessão completa — invocação 4 🍿";
+    }
   } else if (scene === "garden") {
-    if (missionsDone.has("find_roses")) return null;
-    if (rosesFound === 0) label = `🌹 caça às rosas: 0/${rosesTotal}`;
-    else return null; // outro indicador já mostra
+    if (missionsDone.has("festa_nacoes")) {
+      label = `📸 nosso álbum: ${photosFound}/6`;
+    } else if (rosesFound === 0) {
+      label = `✨ lembranças da festa: 0/${rosesTotal}`;
+    } else {
+      return null; // outro indicador já mostra
+    }
   }
   if (!label) return null;
   return (
