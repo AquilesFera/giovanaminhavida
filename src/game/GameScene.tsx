@@ -652,6 +652,72 @@ function GameInner({ userId, worldCode }: { userId: string; worldCode: string })
             </div>
           )}
 
+          {/* Beers (Major) */}
+          {BEERS.map((b) =>
+            collectedBeers.has(b.id) ? null : (
+              <div
+                key={b.id}
+                className="pointer-events-none absolute -translate-x-1/2 -translate-y-1/2"
+                style={{ left: b.x, top: b.y }}
+              >
+                <span
+                  className="text-3xl"
+                  style={{
+                    filter: "drop-shadow(0 0 10px oklch(0.78 0.13 85))",
+                    animation: "float-heart 1.6s ease-in-out infinite alternate",
+                  }}
+                >
+                  🍺
+                </span>
+              </div>
+            )
+          )}
+
+          {/* Popcorns (Cinema) */}
+          {POPCORNS.map((pc) =>
+            collectedPopcorns.has(pc.id) ? null : (
+              <div
+                key={pc.id}
+                className="pointer-events-none absolute -translate-x-1/2 -translate-y-1/2"
+                style={{ left: pc.x, top: pc.y }}
+              >
+                <span
+                  className="text-3xl"
+                  style={{
+                    filter: "drop-shadow(0 0 10px oklch(0.78 0.13 85))",
+                    animation: "float-heart 1.6s ease-in-out infinite alternate",
+                  }}
+                >
+                  🍿
+                </span>
+              </div>
+            )
+          )}
+
+          {/* Album photos (any scene) */}
+          {ALBUM_PHOTOS.map((ph) =>
+            foundPhotos.has(ph.id) ? null : (
+              <div
+                key={ph.id}
+                className="pointer-events-none absolute -translate-x-1/2 -translate-y-1/2"
+                style={{ left: ph.x, top: ph.y }}
+              >
+                <div
+                  className="flex h-12 w-12 items-center justify-center rounded-lg border-2"
+                  style={{
+                    background: "oklch(0.95 0.02 15 / 0.9)",
+                    borderColor: "oklch(0.78 0.13 85)",
+                    boxShadow: "0 0 16px oklch(0.78 0.13 85 / 0.6)",
+                    transform: "rotate(-6deg)",
+                    animation: "float-heart 2s ease-in-out infinite alternate",
+                  }}
+                >
+                  <span className="text-2xl">📸</span>
+                </div>
+              </div>
+            )
+          )}
+
           {/* Gifts */}
           {gifts.map((g) => (
             <button
