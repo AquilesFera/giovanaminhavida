@@ -420,7 +420,7 @@ function GameInner({ userId, worldCode }: { userId: string; worldCode: string })
     }
     raf = requestAnimationFrame(loop);
     return () => cancelAnimationFrame(raf);
-  }, [userId, holdingHands, foundRoses, currentScene, scene]);
+  }, [userId, holdingHands, foundRoses, currentScene, scene, collectedBeers, collectedPopcorns, foundPhotos, BEERS, POPCORNS, ALBUM_PHOTOS, HIDDEN_ROSES, letterFound, worldCode]);
 
   // Pet AI: hop toward avg of players every 4s
   useEffect(() => {
