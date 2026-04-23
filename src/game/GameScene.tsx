@@ -1019,6 +1019,41 @@ function GameInner({ userId, worldCode }: { userId: string; worldCode: string })
         />
       )}
       {showStory && <StoryBook worldCode={worldCode} onClose={() => setShowStory(false)} />}
+
+      {/* Photo lightbox */}
+      {openPhoto && (
+        <div
+          className="fixed inset-0 z-[60] flex items-center justify-center p-4"
+          style={{ background: "oklch(0.04 0.01 10 / 0.95)" }}
+          onClick={() => setOpenPhoto(null)}
+        >
+          <div
+            className="relative max-h-[90vh] max-w-[90vw] overflow-hidden rounded-2xl border-2"
+            style={{ borderColor: "oklch(0.78 0.13 85)", boxShadow: "0 20px 60px oklch(0.78 0.13 85 / 0.4)" }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <img src={openPhoto.url} alt={openPhoto.caption} className="max-h-[80vh] max-w-[90vw] object-contain" />
+            <div
+              className="absolute inset-x-0 bottom-0 px-4 py-3 text-center text-sm"
+              style={{
+                background: "linear-gradient(to top, oklch(0.04 0.01 10 / 0.95), transparent)",
+                color: "oklch(0.78 0.13 85)",
+                fontFamily: "var(--font-heading)",
+              }}
+            >
+              {openPhoto.caption}
+            </div>
+            <button
+              onClick={() => setOpenPhoto(null)}
+              className="absolute right-2 top-2 flex h-9 w-9 items-center justify-center rounded-full text-lg"
+              style={{ background: "oklch(0.04 0.01 10 / 0.8)", color: "oklch(0.78 0.13 85)" }}
+              aria-label="fechar"
+            >
+              ✕
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -1144,6 +1179,11 @@ function SceneMissionHint({
   rosesFound,
   rosesTotal,
   missionsDone,
+  beersFound,
+  beersTotal,
+  popcornsFound,
+  popcornsTotal,
+  photosFound,
 }: {
   scene: SceneId;
   bonfireLit: boolean;
@@ -1151,20 +1191,37 @@ function SceneMissionHint({
   rosesFound: number;
   rosesTotal: number;
   missionsDone: Set<string>;
+  beersFound: number;
+  beersTotal: number;
+  popcornsFound: number;
+  popcornsTotal: number;
+  photosFound: number;
 }) {
   let label = "";
   if (scene === "beach") {
-    label = bonfireLit
-      ? "🔥 fogueira acesa — missão completa"
-      : "🪵 ache a pilha de lenha e acenda a fogueira";
+    if (!missionsDone.has("major_brindes")) {
+      label = `🍺 brinde no Major: ${beersFound}/${beersTotal}`;
+    } else if (!bonfireLit) {
+      label = "🪵 acenda a fogueirinha do bar";
+    } else {
+      label = "🔥 missão completa — saúde 🍻";
+    }
   } else if (scene === "house") {
-    label = letterFound
-      ? "💌 carta encontrada — missão completa"
-      : "💌 procure a carta romântica escondida";
+    if (!missionsDone.has("cinema_pipocas")) {
+      label = `🍿 sessão de cinema: ${popcornsFound}/${popcornsTotal}`;
+    } else if (!letterFound) {
+      label = "💌 procure a carta romântica escondida";
+    } else {
+      label = "🎬 sessão completa — invocação 4 🍿";
+    }
   } else if (scene === "garden") {
-    if (missionsDone.has("find_roses")) return null;
-    if (rosesFound === 0) label = `🌹 caça às rosas: 0/${rosesTotal}`;
-    else return null; // outro indicador já mostra
+    if (missionsDone.has("festa_nacoes")) {
+      label = `📸 nosso álbum: ${photosFound}/6`;
+    } else if (rosesFound === 0) {
+      label = `✨ lembranças da festa: 0/${rosesTotal}`;
+    } else {
+      return null; // outro indicador já mostra
+    }
   }
   if (!label) return null;
   return (
