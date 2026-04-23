@@ -252,8 +252,8 @@ function GameInner({ userId, worldCode }: { userId: string; worldCode: string })
   useEffect(() => {
     const upd = () => {
       setViewport({ w: window.innerWidth, h: window.innerHeight });
-      // Mobile gets bigger zoom so avatars look bigger
-      setZoom(window.innerWidth < 640 ? 1.2 : window.innerWidth < 1024 ? 1 : 0.9);
+      // Mobile: less zoom so the player sees more of the map
+      setZoom(window.innerWidth < 640 ? 0.78 : window.innerWidth < 1024 ? 1 : 0.9);
     };
     upd();
     window.addEventListener("resize", upd);
@@ -967,7 +967,7 @@ function GameInner({ userId, worldCode }: { userId: string; worldCode: string })
       )}
 
       {/* Bottom controls */}
-      <div className="absolute inset-x-0 bottom-0 z-30 px-2 pb-2">
+      <div className="absolute inset-x-0 bottom-0 z-30 px-2 pb-20 sm:pb-2">
         <div className="mx-auto flex max-w-3xl items-end gap-2">
           <Joystick onChange={(dx, dy) => (joystickRef.current = { dx, dy })} />
           <div className="flex-1 space-y-1.5">
