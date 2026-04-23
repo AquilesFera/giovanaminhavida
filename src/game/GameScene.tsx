@@ -967,7 +967,7 @@ function GameInner({ userId, worldCode }: { userId: string; worldCode: string })
       )}
 
       {/* Bottom controls */}
-      <div className="absolute inset-x-0 bottom-0 z-30 px-2 pb-2">
+      <div className="absolute inset-x-0 bottom-0 z-30 px-2 pb-2 sm:pb-2 pb-20">
         <div className="mx-auto flex max-w-3xl items-end gap-2">
           <Joystick onChange={(dx, dy) => (joystickRef.current = { dx, dy })} />
           <div className="flex-1 space-y-1.5">
