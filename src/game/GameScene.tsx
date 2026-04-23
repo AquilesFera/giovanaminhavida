@@ -317,7 +317,42 @@ function GameInner({ userId, worldCode }: { userId: string; worldCode: string })
         const d = Math.hypot(meRef.current.x - r.x, meRef.current.y - r.y);
         if (d < 50) {
           setFoundRoses((s) => new Set(s).add(r.id));
-          bumpMission("find_roses", worldCode, 1);
+          bumpMission("festa_nacoes", worldCode, 1);
+        }
+      }
+
+      // Beer pickup (Major bar)
+      if (currentScene === "beach") {
+        for (const b of BEERS) {
+          if (collectedBeers.has(b.id)) continue;
+          const d = Math.hypot(meRef.current.x - b.x, meRef.current.y - b.y);
+          if (d < 55) {
+            setCollectedBeers((s) => new Set(s).add(b.id));
+            bumpMission("major_brindes", worldCode, 1);
+          }
+        }
+      }
+
+      // Popcorn pickup (Cinema)
+      if (currentScene === "house") {
+        for (const pc of POPCORNS) {
+          if (collectedPopcorns.has(pc.id)) continue;
+          const d = Math.hypot(meRef.current.x - pc.x, meRef.current.y - pc.y);
+          if (d < 55) {
+            setCollectedPopcorns((s) => new Set(s).add(pc.id));
+            bumpMission("cinema_pipocas", worldCode, 1);
+          }
+        }
+      }
+
+      // Album photo pickup (any scene)
+      for (const ph of ALBUM_PHOTOS) {
+        if (foundPhotos.has(ph.id)) continue;
+        const d = Math.hypot(meRef.current.x - ph.x, meRef.current.y - ph.y);
+        if (d < 55) {
+          setFoundPhotos((s) => new Set(s).add(ph.id));
+          setOpenPhoto({ url: ph.url, caption: ph.caption });
+          bumpMission("album_secreto", worldCode, 1);
         }
       }
 
